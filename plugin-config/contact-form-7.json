@@ -66,6 +66,13 @@
       "description": "Message affiché en cas d'erreur"
     },
     {
+      "id": "form_template",
+      "label": "Template du formulaire",
+      "type": "textarea",
+      "description": "Contenu du formulaire CF7 (shortcodes et champs).",
+      "default": "[text* your-name placeholder=\"Votre nom\"]\n[email* your-email placeholder=\"Votre email\"]\n[text your-subject placeholder=\"Sujet\"]\n[textarea your-message placeholder=\"Message\"]\n[submit \"Envoyer\"]"
+    },
+    {
       "id": "form_scss",
       "label": "Styles SCSS du formulaire",
       "type": "file",
@@ -80,6 +87,15 @@
       "file_type": "js",
       "file_path": "themes/twentytwentyfive/assets/js/form.js",
       "description": "Code JavaScript pour les interactions du formulaire"
+    },
+    {
+      "id": "disable_wpautop",
+      "label": "Désactivation automatique des paragraphes",
+      "type": "file",
+      "file_type": "php",
+      "file_path": "themes/twentytwentyfive/functions/wpautop.php",
+      "description": "Code PHP ajouté au thème pour désactiver wpautop sur les formulaires CF7",
+      "default": "<?php\n/**\n * Désactive wpautop pour Contact Form 7\n */\nadd_filter('wpcf7_autop_or_not', '__return_false');\nadd_filter('wpcf7_use_wpautop', '__return_false');\n"
     }
   ],
   "element_selector": {

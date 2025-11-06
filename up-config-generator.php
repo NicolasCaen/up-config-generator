@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UP Config Generator
  * Description: Permet de créer et gérer des configurations pré-établies pour différents plugins WordPress (CF7, Yoast, etc.)
- * Version: 0.1.2.1
+ * Version: 0.1.3.0
  * Author: GEHIN Nicolas
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('UP_CONFIG_GENERATOR_VERSION', '0.1.2.2');
+define('UP_CONFIG_GENERATOR_VERSION', '0.1.3.0');
 define('UP_CONFIG_GENERATOR_PATH', plugin_dir_path(__FILE__));
 define('UP_CONFIG_GENERATOR_URL', plugin_dir_url(__FILE__));
 
@@ -315,6 +315,9 @@ class UP_Config_Generator {
         if (!empty($plugin_config['fields'])) {
             foreach ($plugin_config['fields'] as $field) {
                 $field_value = isset($saved_data['fields'][$field['id']]) ? $saved_data['fields'][$field['id']] : '';
+                if ($field_value === '' && isset($field['default'])) {
+                    $field_value = $field['default'];
+                }
                 
                 echo '<tr>';
                 echo '<th><label for="field_' . esc_attr($field['id']) . '">' . esc_html($field['label']) . '</label></th>';

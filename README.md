@@ -13,7 +13,8 @@ Plugin WordPress permettant de créer et gérer des configurations pré-établie
 - **Application sélective** : possibilité d'enregistrer sans appliquer ou d'appliquer immédiatement
 - **Réédition complète** : toutes les données XML sont rechargées lors de l'édition
 - **Sélecteur d'élément** optionnel pour cibler un élément spécifique (ex: formulaire CF7)
-- **Gestion de fichiers** : création automatique de fichiers SCSS, CSS, JS avec éditeur CodeMirror intégré
+- **Gestion de fichiers** : création automatique de fichiers SCSS, CSS, JS, PHP avec éditeur CodeMirror intégré
+- **Templates CF7** : champ dédié pour stocker et réappliquer le formulaire Contact Form 7
 
 ## Architecture
 
@@ -229,6 +230,7 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 **Exemple d'utilisation** :
 - Créer un fichier SCSS pour styliser un formulaire CF7
 - Créer un fichier JS pour ajouter des interactions
+- Créer un fichier PHP (`functions/wpautop.php`) pour désactiver `wpautop`
 - Créer plusieurs fichiers en une seule configuration
 
 ## Fonctionnalité : Importation de configuration courante
@@ -280,6 +282,8 @@ function up_config_import_cf7($form_id) {
 Les fichiers physiques (SCSS, CSS, JS) sont automatiquement lus depuis leurs chemins définis dans le JSON.
 
 ## Changelog
+
+- **2025-11-06 · v0.1.3.0** · Ajout du champ "Template du formulaire" pour Contact Form 7 avec valeurs par défaut. Génération automatique du fichier `functions/wpautop.php` pour désactiver `wpautop`. Support des fichiers PHP dans le système de sauvegarde. Pré-remplissage des nouveaux champs lors de l'importation.
 
 - **2025-11-06 · v0.1.2.1** · Correction du bug d'échappement des caractères lors de l'enregistrement XML. Remplacement de `htmlspecialchars` par des sections CDATA pour préserver le contenu brut des champs (shortcodes WordPress, code SCSS/CSS/JS, caractères spéciaux). Les données sont maintenant sauvegardées et restaurées sans altération.
 

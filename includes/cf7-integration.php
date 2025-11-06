@@ -87,7 +87,11 @@ function up_config_import_cf7($form_id) {
         $config_data['messages_success'] = isset($properties['messages']['mail_sent_ok']) ? $properties['messages']['mail_sent_ok'] : '';
         $config_data['messages_error'] = isset($properties['messages']['mail_sent_ng']) ? $properties['messages']['mail_sent_ng'] : '';
     }
-    
+
+    if (isset($properties['form'])) {
+        $config_data['form_template'] = $properties['form'];
+    }
+
     return $config_data;
 }
 
@@ -164,7 +168,11 @@ function up_config_apply_cf7($config_data, $form_id) {
     if (isset($config_data['messages_error'])) {
         $properties['messages']['mail_sent_ng'] = sanitize_text_field($config_data['messages_error']);
     }
-    
+
+    if (isset($config_data['form_template'])) {
+        $properties['form'] = $config_data['form_template'];
+    }
+
     // Appliquer les propriétés
     $form->set_properties($properties);
     

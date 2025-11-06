@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<configuration><title><![CDATA[Nicolas2]]></title><description><![CDATA[Configuration importée le 06/11/2025 à 10:14]]></description><date>2025-11-06 10:18:56</date><element>176</element><fields><field id="mail_to"><![CDATA[dest@pixelea.fr]]></field><field id="mail_from"><![CDATA[wordpress@pixelea.fr]]></field><field id="mail_subject"><![CDATA[MON SUJET]]></field><field id="mail_body"><![CDATA[De : [your-name] [your-email]
+Objet : [your-subject]
+
+Corps du message :
+[your-message]
+
+-- 
+Ceci est une notification qu’un formulaire de contact a été envoyé sur votre site web ([_site_title] [_site_url]).]]></field><field id="mail2_active"><![CDATA[0]]></field><field id="mail2_to"><![CDATA[[your-email]]]></field><field id="mail2_subject"><![CDATA[[_site_title] "[your-subject]"]]></field><field id="mail2_body"><![CDATA[Corps du message :
+[your-message]
+
+-- 
+Cet e-mail est un accusé de réception du formulaire de contact que vous avez envoyé sur notre site web ([_site_title] [_site_url]) et dans lequel votre adresse e-mail a été utilisée. Si ce n’est pas vous, veuillez ignorer ce message.]]></field><field id="messages_success"><![CDATA[Merci pour votre message. Il a été envoyé.]]></field><field id="messages_error"><![CDATA[Une erreur s’est produite lors de l’envoi de votre message. Veuillez essayer à nouveau plus tard.]]></field><field id="form_template"><![CDATA[<label> Nicola
+    [text* your-name autocomplete:name] </label>
+
+<label> Votre e-mail
+    [email* your-email autocomplete:email] </label>
+
+<label> Objet
+    [text* your-subject] </label>
+
+<label> Votre message (facultatif)
+    [textarea your-message] </label>
+
+[submit "Envoyer"]]]></field><field id="form_scss" file_path="themes/twentytwentyfive/assets/scss/_form.scss"><![CDATA[]]></field><field id="form_js" file_path="themes/twentytwentyfive/assets/js/form.js"><![CDATA[alert('ok');]]></field><field id="disable_wpautop" file_path="themes/twentytwentyfive/functions/wpautop.php"><![CDATA[<?php
+/**
+ * Désactive wpautop pour Contact Form 7
+ */
+add_filter('wpcf7_use_wpautop', '__return_false');
+]]></field></fields></configuration>
