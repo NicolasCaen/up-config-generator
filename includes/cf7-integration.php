@@ -39,6 +39,59 @@ function up_config_get_cf7_forms() {
 }
 
 /**
+ * Importe la configuration courante d'un formulaire Contact Form 7
+ * 
+ * @param int $form_id ID du formulaire
+ * @return array Données de configuration
+ */
+function up_config_import_cf7($form_id) {
+    // Vérifier si CF7 est actif
+    if (!class_exists('WPCF7_ContactForm')) {
+        return [];
+    }
+    
+    if (empty($form_id)) {
+        return [];
+    }
+    
+    // Récupérer le formulaire
+    $form = WPCF7_ContactForm::get_instance($form_id);
+    
+    if (!$form) {
+        return [];
+    }
+    
+    // Récupérer les propriétés
+    $properties = $form->get_properties();
+    
+    $config_data = [];
+    
+    // Extraire les paramètres de mail
+    if (isset($properties['mail'])) {
+        $config_data['mail_to'] = isset($properties['mail']['recipient']) ? $properties['mail']['recipient'] : '';
+        $config_data['mail_from'] = isset($properties['mail']['sender']) ? $properties['mail']['sender'] : '';
+        $config_data['mail_subject'] = isset($properties['mail']['subject']) ? $properties['mail']['subject'] : '';
+        $config_data['mail_body'] = isset($properties['mail']['body']) ? $properties['mail']['body'] : '';
+    }
+    
+    // Extraire les paramètres de mail 2
+    if (isset($properties['mail_2'])) {
+        $config_data['mail2_active'] = isset($properties['mail_2']['active']) && $properties['mail_2']['active'] ? '1' : '0';
+        $config_data['mail2_to'] = isset($properties['mail_2']['recipient']) ? $properties['mail_2']['recipient'] : '';
+        $config_data['mail2_subject'] = isset($properties['mail_2']['subject']) ? $properties['mail_2']['subject'] : '';
+        $config_data['mail2_body'] = isset($properties['mail_2']['body']) ? $properties['mail_2']['body'] : '';
+    }
+    
+    // Extraire les messages
+    if (isset($properties['messages'])) {
+        $config_data['messages_success'] = isset($properties['messages']['mail_sent_ok']) ? $properties['messages']['mail_sent_ok'] : '';
+        $config_data['messages_error'] = isset($properties['messages']['mail_sent_ng']) ? $properties['messages']['mail_sent_ng'] : '';
+    }
+    
+    return $config_data;
+}
+
+/**
  * Applique une configuration à un formulaire Contact Form 7
  * 
  * @param array $config_data Données de configuration

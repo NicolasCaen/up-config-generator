@@ -79,5 +79,6 @@
       "description": "URL de la page LinkedIn"
     }
   ],
+  "import_callback": "up_config_import_yoast",
   "apply_callback": "up_config_apply_yoast"
 }

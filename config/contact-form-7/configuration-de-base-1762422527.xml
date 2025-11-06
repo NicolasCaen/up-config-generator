@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<configuration><title><![CDATA[configuration de base]]></title><description><![CDATA[Configuration importée le 06/11/2025 à 09:48]]></description><date>2025-11-06 09:58:05</date><element>184</element><fields><field id="mail_to"><![CDATA[[_site_admin_email]]]></field><field id="mail_from"><![CDATA[[_site_title] <wordpress@gmail.com>]]></field><field id="mail_subject"><![CDATA[[_site_title] "[your-subject]"]]></field><field id="mail_body"><![CDATA[Dsssse : [your-name] [your-email]
+Objet : [your-subject]
+
+Corps du message :
+[your-message]
+
+-- 
+Ceci est une notification qu’un formulaire de contact a été envoyé sur votre site web ([_site_title] [_site_url]).]]></field><field id="mail2_active"><![CDATA[0]]></field><field id="mail2_to"><![CDATA[[your-email]]]></field><field id="mail2_subject"><![CDATA[[_site_title] \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"[your-subject]\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"]]></field><field id="mail2_body"><![CDATA[Corps du message :
+[your-message]
+
+-- 
+Cet e-mail est un accusé de réception du formulaire de contact que vous avez envoyé sur notre site web ([_site_title] [_site_url]) et dans lequel votre adresse e-mail a été utilisée. Si ce n’est pas vous, veuillez ignorer ce message.]]></field><field id="messages_success"><![CDATA[Merci pour votre message. Il a été envoyé.]]></field><field id="messages_error"><![CDATA[Une erreur s’est produite lors de l’envoi de votre message. Veuillez essayer à nouveau plus tard.]]></field><field id="form_scss" file_path="themes/twentytwentyfive/assets/scss/_form.scss"><![CDATA[]]></field><field id="form_js" file_path="themes/twentytwentyfive/assets/js/form.js"><![CDATA[alert('ok');]]></field></fields></configuration>

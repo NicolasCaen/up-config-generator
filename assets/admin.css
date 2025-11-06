@@ -116,6 +116,34 @@
     color: #135e96;
 }
 
+/* Section d'importation */
+.up-config-import-section {
+    background: #f0f6fc;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.up-config-import-section h2 {
+    margin-top: 0;
+    font-size: 18px;
+}
+
+.up-config-import-form {
+    margin-top: 15px;
+}
+
+.up-config-import-form label {
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.up-config-import-form select {
+    min-width: 250px;
+    margin-right: 10px;
+}
+
 /* Champs de fichier avec CodeMirror */
 .up-config-file-field {
     width: 100%;

@@ -9,6 +9,46 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Importe la configuration courante de Yoast SEO
+ * 
+ * @param int $element_id Non utilisé pour Yoast (configuration globale)
+ * @return array Données de configuration
+ */
+function up_config_import_yoast($element_id = null) {
+    // Vérifier si Yoast est actif
+    if (!defined('WPSEO_VERSION')) {
+        return [];
+    }
+    
+    // Récupérer les options actuelles
+    $options = get_option('wpseo_titles');
+    $social_options = get_option('wpseo_social');
+    
+    $config_data = [];
+    
+    // Extraire les paramètres généraux
+    if (is_array($options)) {
+        $config_data['site_name'] = isset($options['website_name']) ? $options['website_name'] : '';
+        $config_data['separator'] = isset($options['separator']) ? $options['separator'] : '';
+        $config_data['homepage_title'] = isset($options['title-home-wpseo']) ? $options['title-home-wpseo'] : '';
+        $config_data['homepage_description'] = isset($options['metadesc-home-wpseo']) ? $options['metadesc-home-wpseo'] : '';
+        $config_data['company_or_person'] = isset($options['company_or_person']) ? $options['company_or_person'] : '';
+        $config_data['company_name'] = isset($options['company_name']) ? $options['company_name'] : '';
+        $config_data['company_logo'] = isset($options['company_logo']) ? $options['company_logo'] : '';
+    }
+    
+    // Extraire les paramètres sociaux
+    if (is_array($social_options)) {
+        $config_data['social_facebook'] = isset($social_options['facebook_site']) ? $social_options['facebook_site'] : '';
+        $config_data['social_twitter'] = isset($social_options['twitter_site']) ? $social_options['twitter_site'] : '';
+        $config_data['social_instagram'] = isset($social_options['instagram_url']) ? $social_options['instagram_url'] : '';
+        $config_data['social_linkedin'] = isset($social_options['linkedin_url']) ? $social_options['linkedin_url'] : '';
+    }
+    
+    return $config_data;
+}
+
+/**
  * Applique une configuration Yoast SEO
  * 
  * @param array $config_data Données de configuration

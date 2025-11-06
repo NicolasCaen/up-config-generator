@@ -231,7 +231,59 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 - Créer un fichier JS pour ajouter des interactions
 - Créer plusieurs fichiers en une seule configuration
 
+## Fonctionnalité : Importation de configuration courante
+
+Lors de la création d'une nouvelle configuration, vous pouvez importer la configuration actuellement appliquée pour pré-remplir le formulaire.
+
+### Comment ça fonctionne
+
+1. **Section d'importation** : Affichée en haut du formulaire de création
+2. **Sélection d'élément** : Pour les plugins avec sélecteur (ex: CF7), choisir l'élément à importer
+3. **Import automatique** : 
+   - Récupération des données via le callback `import_callback`
+   - Lecture des fichiers physiques existants (SCSS, CSS, JS)
+   - Pré-remplissage de tous les champs du formulaire
+
+### Configuration JSON
+
+Ajouter le callback d'importation dans le fichier JSON :
+
+```json
+{
+  "name": "Contact Form 7",
+  "fields": [...],
+  "element_selector": {...},
+  "import_callback": "up_config_import_cf7",
+  "apply_callback": "up_config_apply_cf7"
+}
+```
+
+### Callback d'importation
+
+Le callback doit retourner un tableau associatif avec les valeurs des champs :
+
+```php
+function up_config_import_cf7($form_id) {
+    // Récupérer les données du plugin
+    $form = WPCF7_ContactForm::get_instance($form_id);
+    $properties = $form->get_properties();
+    
+    // Retourner les données
+    return [
+        'mail_to' => $properties['mail']['recipient'],
+        'mail_subject' => $properties['mail']['subject'],
+        // ...
+    ];
+}
+```
+
+Les fichiers physiques (SCSS, CSS, JS) sont automatiquement lus depuis leurs chemins définis dans le JSON.
+
 ## Changelog
+
+- **2025-11-06 · v0.1.2.1** · Correction du bug d'échappement des caractères lors de l'enregistrement XML. Remplacement de `htmlspecialchars` par des sections CDATA pour préserver le contenu brut des champs (shortcodes WordPress, code SCSS/CSS/JS, caractères spéciaux). Les données sont maintenant sauvegardées et restaurées sans altération.
+
+- **2025-11-06 · v0.1.2.0** · Ajout de l'importation de configuration courante : nouvelle section dans le formulaire permettant d'importer la configuration actuellement appliquée pour pré-remplir les champs. Support du sélecteur d'élément pour CF7. Lecture automatique des fichiers physiques existants (SCSS, CSS, JS). Callbacks d'importation ajoutés pour CF7 et Yoast SEO.
 
 - **2025-11-06 · v0.1.1.0** · Ajout de la gestion de fichiers : nouveau type de champ "file" permettant de créer automatiquement des fichiers SCSS, CSS, JS, etc. lors de l'application d'une configuration. Intégration de l'éditeur CodeMirror avec coloration syntaxique. Les chemins de fichiers sont stockés dans le XML et les fichiers sont créés automatiquement avec leurs dossiers parents.
 

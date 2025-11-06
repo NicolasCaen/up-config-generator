@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UP Config Generator
  * Description: Permet de créer et gérer des configurations pré-établies pour différents plugins WordPress (CF7, Yoast, etc.)
- * Version: 0.1.1.0
+ * Version: 0.1.2.1
  * Author: GEHIN Nicolas
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('UP_CONFIG_GENERATOR_VERSION', '0.1.1.0');
+define('UP_CONFIG_GENERATOR_VERSION', '0.1.2.2');
 define('UP_CONFIG_GENERATOR_PATH', plugin_dir_path(__FILE__));
 define('UP_CONFIG_GENERATOR_URL', plugin_dir_url(__FILE__));
 
@@ -238,14 +238,58 @@ class UP_Config_Generator {
         $saved_data = [];
         $is_new = empty($config_file);
         
-        
+        // Gérer l'importation de la configuration courante
+        if (isset($_POST['import_current_config']) && wp_verify_nonce($_POST['up_config_import_nonce'], 'up_config_import')) {
+            $import_element = isset($_POST['import_element']) ? sanitize_text_field($_POST['import_element']) : '';
+            $saved_data = $this->import_current_configuration($plugin_slug, $plugin_config, $import_element);
+        }
         // Charger les données si édition
-        if (!$is_new) {
+        elseif (!$is_new) {
             $saved_data = $this->load_saved_config($plugin_slug, $config_file);
         }
         
         echo '<div class="wrap">';
         echo '<h1>' . ($is_new ? 'Nouvelle' : 'Modifier') . ' Configuration - ' . esc_html($plugin_config['name']) . '</h1>';
+        
+        // Section d'importation de configuration courante
+        if ($is_new) {
+            echo '<div class="up-config-import-section">';
+            echo '<h2>Importer la configuration courante</h2>';
+            echo '<p class="description">Vous pouvez importer la configuration actuellement appliquée pour pré-remplir le formulaire.</p>';
+            
+            // Si le plugin a un sélecteur d'élément, afficher un sélecteur
+            if (!empty($plugin_config['element_selector'])) {
+                $selector_config = $plugin_config['element_selector'];
+                
+                echo '<form method="post" action="" class="up-config-import-form">';
+                wp_nonce_field('up_config_import', 'up_config_import_nonce');
+                echo '<input type="hidden" name="import_current_config" value="1">';
+                
+                if (!empty($selector_config['callback']) && is_callable($selector_config['callback'])) {
+                    $options = call_user_func($selector_config['callback']);
+                    echo '<label for="import_element">' . esc_html($selector_config['label']) . ' : </label>';
+                    echo '<select id="import_element" name="import_element">';
+                    echo '<option value="">-- Sélectionner --</option>';
+                    foreach ($options as $value => $label) {
+                        echo '<option value="' . esc_attr($value) . '">' . esc_html($label) . '</option>';
+                    }
+                    echo '</select> ';
+                }
+                
+                echo '<button type="submit" class="button button-secondary">Importer la configuration</button>';
+                echo '</form>';
+            } else {
+                // Pas de sélecteur, importer directement
+                echo '<form method="post" action="" class="up-config-import-form">';
+                wp_nonce_field('up_config_import', 'up_config_import_nonce');
+                echo '<input type="hidden" name="import_current_config" value="1">';
+                echo '<button type="submit" class="button button-secondary">Importer la configuration courante</button>';
+                echo '</form>';
+            }
+            
+            echo '</div>';
+            echo '<hr>';
+        }
         
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         echo '<input type="hidden" name="action" value="up_config_save">';
@@ -440,34 +484,48 @@ class UP_Config_Generator {
         
         $plugin_slug = sanitize_text_field($_POST['plugin_slug']);
         $config_file = isset($_POST['config_file']) && !empty($_POST['config_file']) ? sanitize_file_name($_POST['config_file']) : '';
-        $title = sanitize_text_field($_POST['config_title']);
-        $description = sanitize_textarea_field($_POST['config_description']);
+        // Retirer les slashes ajoutés par WP avant tout traitement
+        $title = sanitize_text_field(wp_unslash($_POST['config_title']));
+        $description = sanitize_textarea_field(wp_unslash($_POST['config_description']));
         
         // Générer un nom de fichier si nouveau
         if (empty($config_file)) {
             $config_file = sanitize_file_name(strtolower(str_replace(' ', '-', $title))) . '-' . time() . '.xml';
         }
         
-        // Créer le XML
+        // Créer le XML avec CDATA pour préserver le contenu brut
         $xml = new SimpleXMLElement('<configuration></configuration>');
-        $xml->addChild('title', htmlspecialchars($title));
-        $xml->addChild('description', htmlspecialchars($description));
+        
+        // Utiliser CDATA pour les champs texte
+        $title_node = $xml->addChild('title');
+        $title_cdata = dom_import_simplexml($title_node);
+        $title_cdata->appendChild($title_cdata->ownerDocument->createCDATASection($title));
+        
+        $desc_node = $xml->addChild('description');
+        $desc_cdata = dom_import_simplexml($desc_node);
+        $desc_cdata->appendChild($desc_cdata->ownerDocument->createCDATASection($description));
+        
         $xml->addChild('date', date('Y-m-d H:i:s'));
         
         // Ajouter l'élément sélectionné
-        $element = isset($_POST['config_element']) ? sanitize_text_field($_POST['config_element']) : '';
-        $xml->addChild('element', htmlspecialchars($element));
+        $element = isset($_POST['config_element']) ? sanitize_text_field(wp_unslash($_POST['config_element'])) : '';
+        $xml->addChild('element', $element);
         
         // Ajouter les champs
         $fields = $xml->addChild('fields');
         if (isset($_POST['config_fields']) && is_array($_POST['config_fields'])) {
             foreach ($_POST['config_fields'] as $field_id => $field_value) {
-                $field = $fields->addChild('field', htmlspecialchars($field_value));
+                // Ne pas filtrer le contenu, utiliser CDATA
+                $field = $fields->addChild('field');
                 $field->addAttribute('id', $field_id);
+                
+                // Utiliser CDATA pour préserver le contenu exact
+                $field_dom = dom_import_simplexml($field);
+                $field_dom->appendChild($field_dom->ownerDocument->createCDATASection(wp_unslash($field_value)));
                 
                 // Ajouter le chemin de fichier si présent
                 if (isset($_POST['config_file_paths'][$field_id]) && !empty($_POST['config_file_paths'][$field_id])) {
-                    $field->addAttribute('file_path', $_POST['config_file_paths'][$field_id]);
+                    $field->addAttribute('file_path', wp_unslash($_POST['config_file_paths'][$field_id]));
                 }
             }
         }
@@ -561,6 +619,61 @@ class UP_Config_Generator {
         if (!empty($plugin_config['apply_callback']) && is_callable($plugin_config['apply_callback'])) {
             call_user_func($plugin_config['apply_callback'], $saved_data['fields'], $saved_data['element']);
             return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Importe la configuration courante d'un plugin
+     */
+    private function import_current_configuration($plugin_slug, $plugin_config, $element_id = '') {
+        $imported_data = [
+            'title' => '',
+            'description' => 'Configuration importée le ' . date('d/m/Y à H:i'),
+            'element' => $element_id,
+            'fields' => [],
+            'file_paths' => []
+        ];
+        
+        // Appeler le callback d'importation si défini
+        if (!empty($plugin_config['import_callback']) && is_callable($plugin_config['import_callback'])) {
+            $config_data = call_user_func($plugin_config['import_callback'], $element_id);
+            
+            if ($config_data && is_array($config_data)) {
+                $imported_data['fields'] = $config_data;
+            }
+        }
+        
+        // Importer les fichiers physiques si définis
+        if (!empty($plugin_config['fields'])) {
+            foreach ($plugin_config['fields'] as $field) {
+                if ($field['type'] === 'file' && !empty($field['file_path'])) {
+                    $file_content = $this->read_physical_file($field['file_path']);
+                    if ($file_content !== false) {
+                        $imported_data['fields'][$field['id']] = $file_content;
+                        $imported_data['file_paths'][$field['id']] = $field['file_path'];
+                    }
+                }
+            }
+        }
+        
+        return $imported_data;
+    }
+    
+    /**
+     * Lit le contenu d'un fichier physique
+     */
+    private function read_physical_file($file_path) {
+        // Résoudre le chemin absolu
+        if (strpos($file_path, '/') === 0) {
+            $absolute_path = ABSPATH . ltrim($file_path, '/');
+        } else {
+            $absolute_path = WP_CONTENT_DIR . '/' . $file_path;
+        }
+        
+        if (file_exists($absolute_path)) {
+            return file_get_contents($absolute_path);
         }
         
         return false;

@@ -87,5 +87,6 @@
     "callback": "up_config_get_cf7_forms",
     "description": "Sélectionnez le formulaire Contact Form 7 à configurer"
   },
+  "import_callback": "up_config_import_cf7",
   "apply_callback": "up_config_apply_cf7"
 }
