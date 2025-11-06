@@ -1,0 +1,20 @@
+{
+  "name": "Fonctions PHP",
+  "fields": [
+    {
+      "id": "function_name",
+      "label": "Nom de la fonction",
+      "type": "text",
+      "description": "Intitulé descriptif sans caractères spéciaux (ex: Hero CTA). Il servira à générer le slug et le nom de la fonction."
+    },
+    {
+      "id": "function_php",
+      "label": "Code PHP",
+      "type": "file",
+      "file_type": "php",
+      "file_path": "themes/%theme%/functions/%slug%.php",
+      "default": "<?php\n/**\n * Fonction générée : %SLUG_CAMEL%\n */\nfunction up_%SLUG_UNDERSCORE%($args = []) {\n    // Votre logique ici\n}\n"
+    }
+  ],
+  "apply_callback": "up_config_apply_functions"
+}

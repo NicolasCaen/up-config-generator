@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UP Config Generator
  * Description: Permet de créer et gérer des configurations pré-établies pour différents plugins WordPress (CF7, Yoast, etc.)
- * Version: 0.1.5.0
+ * Version: 0.1.6.0
  * Author: GEHIN Nicolas
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('UP_CONFIG_GENERATOR_VERSION', '0.1.5.0');
+define('UP_CONFIG_GENERATOR_VERSION', '0.1.6.0');
 define('UP_CONFIG_GENERATOR_PATH', plugin_dir_path(__FILE__));
 define('UP_CONFIG_GENERATOR_URL', plugin_dir_url(__FILE__));
 
@@ -18,6 +18,7 @@ define('UP_CONFIG_GENERATOR_URL', plugin_dir_url(__FILE__));
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/cf7-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/yoast-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/shortcodes-integration.php';
+require_once UP_CONFIG_GENERATOR_PATH . 'includes/functions-integration.php';
 
 class UP_Config_Generator {
     
@@ -266,7 +267,8 @@ class UP_Config_Generator {
             $saved_data = $this->load_saved_config($plugin_slug, $config_file);
         }
         
-        $current_shortcode_slug = isset($saved_data['slug']) ? $saved_data['slug'] : '';
+        $current_generated_slug = isset($saved_data['slug']) ? $saved_data['slug'] : '';
+        $plugin_uses_slug = in_array($plugin_slug, ['shortcodes', 'functions'], true);
 
         echo '<div class="wrap">';
         echo '<h1>' . ($is_new ? 'Nouvelle' : 'Modifier') . ' Configuration - ' . esc_html($plugin_config['name']) . '</h1>';
@@ -316,8 +318,8 @@ class UP_Config_Generator {
         wp_nonce_field('up_config_save', 'up_config_nonce');
         echo '<input type="hidden" name="plugin_slug" value="' . esc_attr($plugin_slug) . '">';
         echo '<input type="hidden" name="config_file" value="' . esc_attr($config_file) . '">';
-        if ($plugin_slug === 'shortcodes') {
-            echo '<input type="hidden" name="config_shortcode_slug" value="' . esc_attr($current_shortcode_slug) . '">';
+        if ($plugin_uses_slug) {
+            echo '<input type="hidden" name="config_generated_slug" value="' . esc_attr($current_generated_slug) . '">';
         }
         
         echo '<table class="form-table">';
@@ -401,8 +403,8 @@ class UP_Config_Generator {
                     echo '<p class="description">' . esc_html($field['description']) . '</p>';
                 }
 
-                if ($plugin_slug === 'shortcodes' && $field['id'] === 'shortcode_name' && !empty($current_shortcode_slug)) {
-                    echo '<p class="description">Slug du shortcode : <code>' . esc_html($current_shortcode_slug) . '</code></p>';
+                if ($plugin_uses_slug && in_array($field['id'], ['shortcode_name', 'function_name'], true) && !empty($current_generated_slug)) {
+                    echo '<p class="description">Slug généré : <code>' . esc_html($current_generated_slug) . '</code></p>';
                 }
                 
                 echo '</td>';
@@ -509,11 +511,17 @@ class UP_Config_Generator {
         if (isset($xml->fields->field)) {
             foreach ($xml->fields->field as $field) {
                 $field_id = (string) $field['id'];
-                if ($field_id === '_shortcode_slug') {
+
+                if ($field_id === '_dynamic_slug') {
                     $data['slug'] = (string) $field;
-                    $data['fields'][$field_id] = (string) $field;
                     continue;
                 }
+
+                if ($field_id === '_shortcode_slug' && empty($data['slug'])) {
+                    $data['slug'] = (string) $field;
+                    continue;
+                }
+
                 $data['fields'][$field_id] = (string) $field;
                 
                 // Charger le chemin de fichier si présent
@@ -617,16 +625,20 @@ class UP_Config_Generator {
     }
 
     /**
-     * Génère un slug propre pour un shortcode
+     * Génère un slug propre pour une configuration dynamique
      */
-    private function generate_shortcode_slug($name) {
+    private function generate_config_slug($name, $fallback_prefix = 'config') {
         $name = trim((string) $name);
         if (function_exists('remove_accents')) {
             $name = remove_accents($name);
         }
         $slug = sanitize_title($name);
         if (empty($slug)) {
-            $slug = 'shortcode-' . uniqid();
+            $fallback_prefix = sanitize_title($fallback_prefix);
+            if (empty($fallback_prefix)) {
+                $fallback_prefix = 'config';
+            }
+            $slug = $fallback_prefix . '-' . uniqid();
         }
         return $slug;
     }
@@ -660,13 +672,29 @@ class UP_Config_Generator {
     }
 
     /**
+     * Retourne le chemin du fichier pour une configuration de fonction
+     */
+    private function get_function_file_paths($slug, $theme) {
+        $base_dir = 'themes/' . $theme . '/functions';
+
+        return [
+            'function_php' => $base_dir . '/' . $slug . '.php'
+        ];
+    }
+
+    /**
      * Remplace les placeholders %slug%, %theme%, %SLUG_CAMEL% dans une chaîne
      */
-    private function replace_shortcode_placeholders($content, $slug, $slug_camel, $theme) {
+    private function replace_placeholders($content, $slug, $slug_camel, $theme) {
+        $slug_underscore = preg_replace('/[^a-z0-9_]/i', '_', str_replace('-', '_', $slug));
+        $slug_underscore = preg_replace('/_+/', '_', $slug_underscore);
+        $slug_underscore = trim($slug_underscore, '_');
+
         $replacements = [
             '%slug%' => $slug,
             '%theme%' => $theme,
-            '%SLUG_CAMEL%' => $slug_camel
+            '%SLUG_CAMEL%' => $slug_camel,
+            '%SLUG_UNDERSCORE%' => strtolower($slug_underscore)
         ];
 
         return strtr($content, $replacements);
@@ -704,44 +732,96 @@ class UP_Config_Generator {
             }
         }
 
-        $shortcode_slug = '';
-        $shortcode_theme = '';
-        $shortcode_slug_camel = '';
+        $plugin_uses_slug = in_array($plugin_slug, ['shortcodes', 'functions'], true);
+        $generated_slug = '';
+        $generated_slug_camel = '';
+        $generated_slug_theme = '';
+
         if ($plugin_slug === 'shortcodes') {
-            $shortcode_theme = get_stylesheet();
+            $generated_slug_theme = get_stylesheet();
             $shortcode_name = isset($config_fields['shortcode_name']) ? $config_fields['shortcode_name'] : '';
-            $existing_slug = isset($_POST['config_shortcode_slug']) ? sanitize_title(wp_unslash($_POST['config_shortcode_slug'])) : '';
-            $generated_slug = !empty($shortcode_name) ? $this->generate_shortcode_slug($shortcode_name) : '';
+            $existing_slug = isset($_POST['config_generated_slug']) ? sanitize_title(wp_unslash($_POST['config_generated_slug'])) : '';
+            $generated_slug = !empty($shortcode_name) ? $this->generate_config_slug($shortcode_name, 'shortcode') : '';
 
             if (empty($generated_slug)) {
                 $generated_slug = $existing_slug;
             }
 
             if (empty($generated_slug)) {
-                $generated_slug = $this->generate_shortcode_slug($title);
+                $generated_slug = $this->generate_config_slug($title, 'shortcode');
             }
 
-            $shortcode_slug = $generated_slug;
-            $shortcode_slug_camel = $this->slug_to_camel($shortcode_slug);
+            if (!empty($generated_slug)) {
+                $generated_slug_camel = $this->slug_to_camel($generated_slug);
 
-            $paths = $this->get_shortcode_file_paths($shortcode_slug, $shortcode_theme);
-            foreach ($paths as $field_id => $path) {
-                $config_file_paths[$field_id] = $path;
-            }
+                $paths = $this->get_shortcode_file_paths($generated_slug, $generated_slug_theme);
+                foreach ($paths as $field_id => $path) {
+                    $config_file_paths[$field_id] = $path;
+                }
 
-            foreach ($config_fields as $field_id => $field_value) {
-                if (is_string($field_value)) {
-                    $config_fields[$field_id] = $this->replace_shortcode_placeholders($field_value, $shortcode_slug, $shortcode_slug_camel, $shortcode_theme);
+                foreach ($config_fields as $field_id => $field_value) {
+                    if (is_string($field_value)) {
+                        $config_fields[$field_id] = $this->replace_placeholders($field_value, $generated_slug, $generated_slug_camel, $generated_slug_theme);
+                    }
+                }
+
+                foreach ($config_file_paths as $field_id => $path) {
+                    if (is_string($path)) {
+                        $config_file_paths[$field_id] = $this->replace_placeholders($path, $generated_slug, $generated_slug_camel, $generated_slug_theme);
+                    }
+                }
+
+                $config_fields['_dynamic_slug'] = $generated_slug;
+                $config_fields['_shortcode_slug'] = $generated_slug;
+            } else {
+                foreach (['shortcode_php', 'shortcode_css', 'shortcode_scss', 'shortcode_js', 'shortcode_gsap'] as $field_id) {
+                    if (isset($config_file_paths[$field_id])) {
+                        $config_file_paths[$field_id] = '';
+                    }
                 }
             }
+        }
 
-            foreach ($config_file_paths as $field_id => $path) {
-                if (is_string($path)) {
-                    $config_file_paths[$field_id] = $this->replace_shortcode_placeholders($path, $shortcode_slug, $shortcode_slug_camel, $shortcode_theme);
-                }
+        if ($plugin_slug === 'functions') {
+            $generated_slug_theme = get_stylesheet();
+            $function_name = isset($config_fields['function_name']) ? $config_fields['function_name'] : '';
+            $existing_slug = isset($_POST['config_generated_slug']) ? sanitize_title(wp_unslash($_POST['config_generated_slug'])) : '';
+            $generated_slug = !empty($function_name) ? $this->generate_config_slug($function_name, 'function') : '';
+
+            if (empty($generated_slug)) {
+                $generated_slug = $existing_slug;
             }
 
-            $config_fields['_shortcode_slug'] = $shortcode_slug;
+            if (empty($generated_slug)) {
+                $generated_slug = $this->generate_config_slug($title, 'function');
+            }
+
+            if (!empty($generated_slug)) {
+                $generated_slug_camel = $this->slug_to_camel($generated_slug);
+
+                $paths = $this->get_function_file_paths($generated_slug, $generated_slug_theme);
+                foreach ($paths as $field_id => $path) {
+                    $config_file_paths[$field_id] = $path;
+                }
+
+                foreach ($config_fields as $field_id => $field_value) {
+                    if (is_string($field_value)) {
+                        $config_fields[$field_id] = $this->replace_placeholders($field_value, $generated_slug, $generated_slug_camel, $generated_slug_theme);
+                    }
+                }
+
+                foreach ($config_file_paths as $field_id => $path) {
+                    if (is_string($path)) {
+                        $config_file_paths[$field_id] = $this->replace_placeholders($path, $generated_slug, $generated_slug_camel, $generated_slug_theme);
+                    }
+                }
+
+                $config_fields['_dynamic_slug'] = $generated_slug;
+            } else {
+                if (isset($config_file_paths['function_php'])) {
+                    $config_file_paths['function_php'] = '';
+                }
+            }
         }
         
         // Générer un nom de fichier si nouveau

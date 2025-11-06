@@ -17,6 +17,7 @@ Plugin WordPress permettant de créer et gérer des configurations pré-établie
 - **Templates CF7** : champ dédié pour stocker et réappliquer le formulaire Contact Form 7
 - **Aperçus visuels** : upload d'une image pour chaque configuration avec affichage dans le listing
 - **Shortcodes** : génération complète d'un dossier de shortcode (PHP, CSS, SCSS, JS, GSAP) avec slug automatisé
+- **Fonctions PHP** : création automatisée de fichiers PHP dans `functions/` avec slug normalisé
 
 ## Architecture
 
@@ -30,6 +31,7 @@ up-config-generator/
 │   ├── contact-form-7.json    # Exemple pour CF7
 │   └── yoast-seo.json         # Exemple pour Yoast
 │   └── shortcodes.json        # Exemple pour générer un shortcode complet
+│   └── functions.json         # Exemple pour créer une fonction PHP dédiée
 ├── config/                     # Configurations sauvegardées (XML)
 │   ├── contact-form-7/        # Configs CF7
 │   │   ├── ma-config-1.xml
@@ -255,6 +257,13 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 - **Placeholders** : Le contenu par défaut des fichiers remplace automatiquement `%slug%`, `%theme%` et `%SLUG_CAMEL%`
 - **Edition** : lors de la modification, le slug existant est rappelé et les chemins de fichiers sont conservés
 
+## Fonctionnalité : Générateur de fonctions PHP
+
+- **Slug automatique** : le nom de la fonction est transformé en slug (`hero-cta` → fichier `hero-cta.php`)
+- **Fichier généré** : `themes/{theme}/functions/{slug}.php`
+- **Placeholders** : le contenu remplace `%slug%`, `%SLUG_CAMEL%`, `%SLUG_UNDERSCORE%` et `%theme%`
+- **Edition** : le slug existant est affiché et préserve le chemin du fichier PHP
+
 ## Fonctionnalité : Importation de configuration courante
 
 Lors de la création d'une nouvelle configuration, vous pouvez importer la configuration actuellement appliquée pour pré-remplir le formulaire.
@@ -304,6 +313,8 @@ function up_config_import_cf7($form_id) {
 Les fichiers physiques (SCSS, CSS, JS) sont automatiquement lus depuis leurs chemins définis dans le JSON.
 
 ## Changelog
+
+- **2025-11-06 · v0.1.6.0** · Ajout du générateur de fonctions PHP (nouveau JSON `functions.json`, slug automatique, création du fichier dans `functions/`). Mutualisation de la logique de slug et support du placeholder `%SLUG_UNDERSCORE%`.
 
 - **2025-11-06 · v0.1.5.0** · Ajout d'un module de génération de shortcodes : nouveau JSON `shortcodes.json`, création automatique des fichiers PHP/CSS/SCSS/JS/GSAP avec placeholders, slug nettoyé et sauvegardé dans la configuration. Support des aperçus existant pour les shortcodes.
 
