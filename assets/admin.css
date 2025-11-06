@@ -1,0 +1,131 @@
+/**
+ * Styles pour l'interface d'administration du plugin UP Config Generator
+ */
+
+.up-config-generator-wrap {
+    max-width: 1200px;
+}
+
+.up-config-generator-wrap h1 {
+    margin-bottom: 20px;
+}
+
+.up-config-generator-wrap .page-title-action {
+    margin-left: 10px;
+}
+
+/* Liste des configurations */
+.up-config-list-table {
+    margin-top: 20px;
+}
+
+.up-config-list-table th {
+    font-weight: 600;
+}
+
+.up-config-list-table td {
+    vertical-align: middle;
+}
+
+/* Formulaire d'édition */
+.up-config-form .form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+}
+
+.up-config-form .form-table td {
+    padding: 15px 10px;
+}
+
+.up-config-form .form-table input[type="text"],
+.up-config-form .form-table textarea,
+.up-config-form .form-table select {
+    width: 100%;
+    max-width: 600px;
+}
+
+.up-config-form .form-table textarea {
+    min-height: 100px;
+}
+
+.up-config-form .description {
+    margin-top: 5px;
+    color: #646970;
+    font-style: italic;
+}
+
+/* Case à cocher "Appliquer" */
+.up-config-apply-checkbox {
+    padding: 10px;
+    background: #f0f6fc;
+    border-left: 4px solid #2271b1;
+    margin-top: 10px;
+}
+
+.up-config-apply-checkbox label {
+    font-weight: 600;
+}
+
+/* Messages de succès */
+.up-config-success {
+    margin: 20px 0;
+    padding: 10px 15px;
+    background: #d7f0d7;
+    border-left: 4px solid #46b450;
+}
+
+.up-config-error {
+    margin: 20px 0;
+    padding: 10px 15px;
+    background: #ffd7d7;
+    border-left: 4px solid #dc3232;
+}
+
+/* Page principale */
+.up-config-plugins-list {
+    margin-top: 20px;
+}
+
+.up-config-plugins-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.up-config-plugins-list li {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.up-config-plugins-list li:hover {
+    border-color: #2271b1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.up-config-plugins-list li a {
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+.up-config-plugins-list li a:hover {
+    color: #135e96;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .up-config-form .form-table th,
+    .up-config-form .form-table td {
+        display: block;
+        width: 100%;
+        padding: 10px 0;
+    }
+    
+    .up-config-form .form-table th {
+        padding-bottom: 5px;
+    }
+}

@@ -1,0 +1,83 @@
+{
+  "name": "Yoast SEO",
+  "fields": [
+    {
+      "id": "site_name",
+      "label": "Nom du site",
+      "type": "text",
+      "description": "Nom du site pour les métadonnées"
+    },
+    {
+      "id": "separator",
+      "label": "Séparateur de titre",
+      "type": "select",
+      "options": {
+        "-": "Tiret (-)",
+        "|": "Pipe (|)",
+        "•": "Bullet (•)",
+        "~": "Tilde (~)",
+        "«": "Guillemets («)"
+      },
+      "description": "Séparateur utilisé dans les titres SEO"
+    },
+    {
+      "id": "homepage_title",
+      "label": "Titre de la page d'accueil",
+      "type": "text",
+      "description": "Titre SEO de la page d'accueil"
+    },
+    {
+      "id": "homepage_description",
+      "label": "Description de la page d'accueil",
+      "type": "textarea",
+      "description": "Meta description de la page d'accueil"
+    },
+    {
+      "id": "company_or_person",
+      "label": "Type d'organisation",
+      "type": "select",
+      "options": {
+        "company": "Entreprise",
+        "person": "Personne"
+      },
+      "description": "Type d'entité pour le schema.org"
+    },
+    {
+      "id": "company_name",
+      "label": "Nom de l'entreprise",
+      "type": "text",
+      "description": "Nom de l'entreprise (si applicable)"
+    },
+    {
+      "id": "company_logo",
+      "label": "URL du logo",
+      "type": "text",
+      "description": "URL complète du logo de l'entreprise"
+    },
+    {
+      "id": "social_facebook",
+      "label": "URL Facebook",
+      "type": "text",
+      "description": "URL de la page Facebook"
+    },
+    {
+      "id": "social_twitter",
+      "label": "Nom d'utilisateur Twitter",
+      "type": "text",
+      "description": "Sans le @"
+    },
+    {
+      "id": "social_instagram",
+      "label": "URL Instagram",
+      "type": "text",
+      "description": "URL du profil Instagram"
+    },
+    {
+      "id": "social_linkedin",
+      "label": "URL LinkedIn",
+      "type": "text",
+      "description": "URL de la page LinkedIn"
+    }
+  ],
+  "apply_callback": "up_config_apply_yoast"
+}

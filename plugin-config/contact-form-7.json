@@ -1,0 +1,75 @@
+{
+  "name": "Contact Form 7",
+  "fields": [
+    {
+      "id": "mail_to",
+      "label": "Email destinataire",
+      "type": "text",
+      "description": "Adresse email qui recevra les messages du formulaire"
+    },
+    {
+      "id": "mail_from",
+      "label": "Email expéditeur",
+      "type": "text",
+      "description": "Format: Nom <email@example.com>"
+    },
+    {
+      "id": "mail_subject",
+      "label": "Sujet de l'email",
+      "type": "text",
+      "description": "Sujet de l'email reçu"
+    },
+    {
+      "id": "mail_body",
+      "label": "Corps de l'email",
+      "type": "textarea",
+      "description": "Contenu de l'email (vous pouvez utiliser les tags CF7)"
+    },
+    {
+      "id": "mail2_active",
+      "label": "Activer l'email 2",
+      "type": "select",
+      "options": {
+        "0": "Non",
+        "1": "Oui"
+      },
+      "description": "Email de confirmation envoyé à l'utilisateur"
+    },
+    {
+      "id": "mail2_to",
+      "label": "Email 2 - Destinataire",
+      "type": "text",
+      "description": "Généralement [your-email] pour envoyer à l'utilisateur"
+    },
+    {
+      "id": "mail2_subject",
+      "label": "Email 2 - Sujet",
+      "type": "text",
+      "description": "Sujet de l'email de confirmation"
+    },
+    {
+      "id": "mail2_body",
+      "label": "Email 2 - Corps",
+      "type": "textarea",
+      "description": "Message de confirmation envoyé à l'utilisateur"
+    },
+    {
+      "id": "messages_success",
+      "label": "Message de succès",
+      "type": "text",
+      "description": "Message affiché après envoi réussi"
+    },
+    {
+      "id": "messages_error",
+      "label": "Message d'erreur",
+      "type": "text",
+      "description": "Message affiché en cas d'erreur"
+    }
+  ],
+  "element_selector": {
+    "label": "Formulaire cible",
+    "callback": "up_config_get_cf7_forms",
+    "description": "Sélectionnez le formulaire Contact Form 7 à configurer"
+  },
+  "apply_callback": "up_config_apply_cf7"
+}
