@@ -233,4 +233,6 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 
 ## Changelog
 
-- **2025-11-06 · v0.1.0** · Création du plugin avec architecture de base, système de sauvegarde en fichiers XML, lecture des configurations JSON, interface d'administration dynamique avec tableau de gestion, réédition complète des configurations et logique d'application. Gestion de fichiers (SCSS, CSS, JS) avec éditeur CodeMirror intégré. Intégrations Contact Form 7 et Yoast SEO incluses.
+- **2025-11-06 · v0.1.1.0** · Ajout de la gestion de fichiers : nouveau type de champ "file" permettant de créer automatiquement des fichiers SCSS, CSS, JS, etc. lors de l'application d'une configuration. Intégration de l'éditeur CodeMirror avec coloration syntaxique. Les chemins de fichiers sont stockés dans le XML et les fichiers sont créés automatiquement avec leurs dossiers parents.
+
+- **2025-11-06 · v0.1.0** · Création du plugin avec architecture de base, système de sauvegarde en fichiers XML, lecture des configurations JSON, interface d'administration dynamique avec tableau de gestion, réédition complète des configurations et logique d'application. Intégrations Contact Form 7 et Yoast SEO incluses.
