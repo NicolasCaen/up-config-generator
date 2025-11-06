@@ -15,6 +15,7 @@ Plugin WordPress permettant de créer et gérer des configurations pré-établie
 - **Sélecteur d'élément** optionnel pour cibler un élément spécifique (ex: formulaire CF7)
 - **Gestion de fichiers** : création automatique de fichiers SCSS, CSS, JS, PHP avec éditeur CodeMirror intégré
 - **Templates CF7** : champ dédié pour stocker et réappliquer le formulaire Contact Form 7
+- **Aperçus visuels** : upload d'une image pour chaque configuration avec affichage dans le listing
 
 ## Architecture
 
@@ -233,6 +234,13 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 - Créer un fichier PHP (`functions/wpautop.php`) pour désactiver `wpautop`
 - Créer plusieurs fichiers en une seule configuration
 
+### Aperçus de configuration
+
+- Téléversement d'une image (JPG, PNG, GIF, WebP) pour chaque configuration
+- L'aperçu est stocké dans `config/[plugin-slug]/` avec le même nom que le XML (`ma-config-1.png`)
+- Affichage automatique dans la liste des configurations
+- Gestion depuis le formulaire : upload d'un nouvel aperçu ou suppression de l'image actuelle
+
 ## Fonctionnalité : Importation de configuration courante
 
 Lors de la création d'une nouvelle configuration, vous pouvez importer la configuration actuellement appliquée pour pré-remplir le formulaire.
@@ -282,6 +290,8 @@ function up_config_import_cf7($form_id) {
 Les fichiers physiques (SCSS, CSS, JS) sont automatiquement lus depuis leurs chemins définis dans le JSON.
 
 ## Changelog
+
+- **2025-11-06 · v0.1.4.0** · Ajout d'un champ d'aperçu pour chaque configuration (upload, suppression). Affichage des aperçus dans la liste des configurations et dans le formulaire d'édition. Stockage des images aux côtés des fichiers XML.
 
 - **2025-11-06 · v0.1.3.0** · Ajout du champ "Template du formulaire" pour Contact Form 7 avec valeurs par défaut. Génération automatique du fichier `functions/wpautop.php` pour désactiver `wpautop`. Support des fichiers PHP dans le système de sauvegarde. Pré-remplissage des nouveaux champs lors de l'importation.
 

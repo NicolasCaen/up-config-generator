@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UP Config Generator
  * Description: Permet de créer et gérer des configurations pré-établies pour différents plugins WordPress (CF7, Yoast, etc.)
- * Version: 0.1.3.0
+ * Version: 0.1.4.0
  * Author: GEHIN Nicolas
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('UP_CONFIG_GENERATOR_VERSION', '0.1.3.0');
+define('UP_CONFIG_GENERATOR_VERSION', '0.1.4.0');
 define('UP_CONFIG_GENERATOR_PATH', plugin_dir_path(__FILE__));
 define('UP_CONFIG_GENERATOR_URL', plugin_dir_url(__FILE__));
 
@@ -21,6 +21,14 @@ require_once UP_CONFIG_GENERATOR_PATH . 'includes/yoast-integration.php';
 class UP_Config_Generator {
     
     private static $instance = null;
+    private $preview_allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    private $preview_allowed_mimes = [
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp'
+    ];
     
     public static function get_instance() {
         if (null === self::$instance) {
@@ -195,7 +203,7 @@ class UP_Config_Generator {
         
         if (!empty($configs)) {
             echo '<table class="wp-list-table widefat fixed striped">';
-            echo '<thead><tr><th>Titre</th><th>Description</th><th>Date</th><th>Actions</th></tr></thead>';
+            echo '<thead><tr><th>Aperçu</th><th>Titre</th><th>Description</th><th>Date</th><th>Actions</th></tr></thead>';
             echo '<tbody>';
             
             foreach ($configs as $config_file => $config_data) {
@@ -211,7 +219,16 @@ class UP_Config_Generator {
                 
                 $date = isset($config_data['date']) ? date('d/m/Y H:i', strtotime($config_data['date'])) : '-';
                 
+                $preview = isset($config_data['preview']) ? $config_data['preview'] : null;
+
                 echo '<tr>';
+                echo '<td class="up-config-preview-cell">';
+                if (!empty($preview['url'])) {
+                    echo '<img src="' . esc_url($preview['url']) . '" alt="Aperçu" class="up-config-preview-img" />';
+                } else {
+                    echo '<span class="up-config-preview-placeholder">—</span>';
+                }
+                echo '</td>';
                 echo '<td><strong>' . esc_html($config_data['title']) . '</strong></td>';
                 echo '<td>' . esc_html($config_data['description']) . '</td>';
                 echo '<td>' . esc_html($date) . '</td>';
@@ -291,7 +308,7 @@ class UP_Config_Generator {
             echo '<hr>';
         }
         
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data">';
         echo '<input type="hidden" name="action" value="up_config_save">';
         wp_nonce_field('up_config_save', 'up_config_nonce');
         echo '<input type="hidden" name="plugin_slug" value="' . esc_attr($plugin_slug) . '">';
@@ -309,6 +326,24 @@ class UP_Config_Generator {
         echo '<tr>';
         echo '<th><label for="config_description">Description</label></th>';
         echo '<td><textarea id="config_description" name="config_description" rows="3" class="large-text">' . (isset($saved_data['description']) ? esc_textarea($saved_data['description']) : '') . '</textarea></td>';
+        echo '</tr>';
+
+        // Aperçu
+        $current_preview = isset($saved_data['preview']) ? $saved_data['preview'] : null;
+        echo '<tr class="up-config-preview-row">';
+        echo '<th><label for="config_preview">Aperçu</label></th>';
+        echo '<td>';
+        if ($current_preview && !empty($current_preview['url'])) {
+            echo '<div class="up-config-current-preview">';
+            echo '<img src="' . esc_url($current_preview['url']) . '" alt="Aperçu actuel" class="up-config-preview-img" />';
+            echo '<label><input type="checkbox" name="config_preview_remove" value="1"> Supprimer l\'aperçu</label>';
+            echo '</div>';
+        } else {
+            echo '<p class="description">Aucun aperçu n\'est associé à cette configuration.</p>';
+        }
+        echo '<input type="file" id="config_preview" name="config_preview" accept="image/png,image/jpeg,image/gif,image/webp">';
+        echo '<p class="description">Formats acceptés : JPG, PNG, GIF, WebP.</p>';
+        echo '</td>';
         echo '</tr>';
         
         // Champs de configuration dynamiques
@@ -455,7 +490,8 @@ class UP_Config_Generator {
             'date' => (string) $xml->date,
             'element' => (string) $xml->element,
             'fields' => [],
-            'file_paths' => []
+            'file_paths' => [],
+            'preview' => $this->get_config_preview($plugin_slug, $config_file)
         ];
         
         if (isset($xml->fields->field)) {
@@ -471,6 +507,96 @@ class UP_Config_Generator {
         }
         
         return $data;
+    }
+
+    /**
+     * Retourne les informations d'aperçu (url, path, extension) si disponible
+     */
+    private function get_config_preview($plugin_slug, $config_file) {
+        return $this->find_preview_file($plugin_slug, $config_file);
+    }
+
+    /**
+     * Recherche un fichier d'aperçu correspondant au fichier XML
+     */
+    private function find_preview_file($plugin_slug, $config_file) {
+        $config_dir = UP_CONFIG_GENERATOR_PATH . 'config/' . $plugin_slug . '/';
+        if (!is_dir($config_dir)) {
+            return null;
+        }
+
+        $base = pathinfo($config_file, PATHINFO_FILENAME);
+
+        foreach ($this->preview_allowed_extensions as $extension) {
+            $absolute = $config_dir . $base . '.' . $extension;
+            if (file_exists($absolute)) {
+                return [
+                    'path' => $absolute,
+                    'url' => UP_CONFIG_GENERATOR_URL . 'config/' . $plugin_slug . '/' . $base . '.' . $extension,
+                    'extension' => $extension,
+                    'filename' => $base . '.' . $extension
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Supprime l'aperçu associé à une configuration
+     */
+    private function delete_config_preview($plugin_slug, $config_file) {
+        $config_dir = UP_CONFIG_GENERATOR_PATH . 'config/' . $plugin_slug . '/';
+        if (!is_dir($config_dir)) {
+            return;
+        }
+
+        $base = pathinfo($config_file, PATHINFO_FILENAME);
+
+        foreach ($this->preview_allowed_extensions as $extension) {
+            $absolute = $config_dir . $base . '.' . $extension;
+            if (file_exists($absolute)) {
+                unlink($absolute);
+            }
+        }
+    }
+
+    /**
+     * Enregistre un nouveau fichier d'aperçu
+     */
+    private function save_config_preview($plugin_slug, $config_file, $file) {
+        if (empty($file) || !isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            return;
+        }
+
+        if (!empty($file['error'])) {
+            return;
+        }
+
+        $check = wp_check_filetype_and_ext($file['tmp_name'], $file['name'], $this->preview_allowed_mimes);
+        $extension = '';
+
+        if (!empty($check['ext']) && in_array($check['ext'], $this->preview_allowed_extensions, true)) {
+            $extension = $check['ext'];
+        } else {
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($extension, $this->preview_allowed_extensions, true)) {
+                return;
+            }
+        }
+
+        $config_dir = UP_CONFIG_GENERATOR_PATH . 'config/' . $plugin_slug . '/';
+        wp_mkdir_p($config_dir);
+
+        $base = pathinfo($config_file, PATHINFO_FILENAME);
+        $destination = $config_dir . $base . '.' . $extension;
+
+        // Supprimer les aperçus existants avant de sauvegarder le nouveau
+        $this->delete_config_preview($plugin_slug, $config_file);
+
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            @chmod($destination, 0644);
+        }
     }
     
     /**
@@ -539,6 +665,18 @@ class UP_Config_Generator {
         
         $file_path = $config_dir . '/' . $config_file;
         $xml->asXML($file_path);
+
+        // Gérer l'aperçu (suppression + upload)
+        if (isset($_POST['config_preview_remove']) && $_POST['config_preview_remove'] == '1') {
+            $this->delete_config_preview($plugin_slug, $config_file);
+        }
+
+        if (isset($_FILES['config_preview']) && is_array($_FILES['config_preview'])) {
+            $preview_file = $_FILES['config_preview'];
+            if (isset($preview_file['error']) && $preview_file['error'] !== UPLOAD_ERR_NO_FILE && $preview_file['error'] === UPLOAD_ERR_OK) {
+                $this->save_config_preview($plugin_slug, $config_file, $preview_file);
+            }
+        }
         
         // Appliquer si demandé
         if (isset($_POST['apply_config']) && $_POST['apply_config'] == '1') {
@@ -566,6 +704,8 @@ class UP_Config_Generator {
             wp_die('Permissions insuffisantes');
         }
         
+        $this->delete_config_preview($plugin_slug, $config_file);
+
         $file_path = UP_CONFIG_GENERATOR_PATH . 'config/' . $plugin_slug . '/' . $config_file;
         
         if (file_exists($file_path)) {
@@ -636,7 +776,8 @@ class UP_Config_Generator {
             'description' => 'Configuration importée le ' . date('d/m/Y à H:i'),
             'element' => $element_id,
             'fields' => [],
-            'file_paths' => []
+            'file_paths' => [],
+            'preview' => null
         ];
         
         // Appeler le callback d'importation si défini

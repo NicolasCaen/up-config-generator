@@ -144,6 +144,40 @@
     margin-right: 10px;
 }
 
+/* Aperçus */
+.up-config-preview-cell {
+    width: 120px;
+    text-align: center;
+}
+
+.up-config-preview-img {
+    max-width: 100px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #c3c4c7;
+    background: #fff;
+    display: inline-block;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.up-config-preview-placeholder {
+    color: #a0a0a0;
+    font-size: 12px;
+}
+
+.up-config-current-preview {
+    margin-bottom: 10px;
+}
+
+.up-config-preview-cell:hover .up-config-preview-img,
+.up-config-current-preview:hover .up-config-preview-img {
+    transform: scale(3);
+    z-index: 10;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
 /* Champs de fichier avec CodeMirror */
 .up-config-file-field {
     width: 100%;
