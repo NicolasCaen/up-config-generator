@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<configuration><title><![CDATA[TEST]]></title><description><![CDATA[]]></description><date>2025-11-06 13:33:53</date><element/><slug><![CDATA[grid]]></slug><fields><field id="shortcode_name"><![CDATA[grid]]></field><field id="shortcode_php" file_path="themes/twentytwentyfive/shortcodes/grid/grid.php"><![CDATA[<?php
+function up_shortcode_grid($atts = [], $content = null) {
+    $atts = shortcode_atts([], $atts, 'grid');
+    ob_start();
+    ?>
+    <div class="shortcode-grid">
+        <?php echo do_shortcode($content); ?>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode('grid', 'up_shortcode_grid');
+]]></field><field id="shortcode_css" file_path="themes/twentytwentyfive/shortcodes/grid/style.css"><![CDATA[.shortcode-grid {
+    display: block;
+}
+]]></field><field id="shortcode_scss" file_path="themes/twentytwentyfive/shortcodes/grid/assets/scss/style.scss"><![CDATA[.shortcode-grid {
+  display: block;
+}
+]]></field><field id="shortcode_js" file_path="themes/twentytwentyfive/shortcodes/grid/assets/js/grid.js"><![CDATA[document.addEventListener('DOMContentLoaded', () => {
+  const root = document.querySelector('.shortcode-grid');
+  if (!root) return;
+  // Votre logique ici
+});
+]]></field><field id="shortcode_gsap" file_path="themes/twentytwentyfive/shortcodes/grid/assets/js/gsap/gsap-grid.js"><![CDATA[import { gsap } from 'gsap';
+
+export function initGrid() {
+  const root = document.querySelector('.shortcode-grid');
+  if (!root) return;
+  gsap.from(root, { opacity: 0, y: 40, duration: 0.6, ease: 'power2.out' });
+}
+]]></field><field id="_shortcode_slug"><![CDATA[grid]]></field></fields></configuration>

@@ -1,0 +1,52 @@
+{
+  "name": "Shortcodes",
+  "fields": [
+    {
+      "id": "shortcode_name",
+      "label": "Nom du shortcode",
+      "type": "text",
+      "description": "Nom sans crochets. Il servira à générer le slug et le tag du shortcode (ex: hero-banner)."
+    },
+    {
+      "id": "shortcode_php",
+      "label": "Fichier PHP du shortcode",
+      "type": "file",
+      "file_type": "php",
+      "file_path": "themes/%theme%/shortcodes/%slug%/%slug%.php",
+      "default": "<?php\nfunction up_shortcode_%slug%($atts = [], $content = null) {\n    $atts = shortcode_atts([], $atts, '%slug%');\n    ob_start();\n    ?>\n    <div class=\"shortcode-%slug%\">\n        <?php echo do_shortcode($content); ?>\n    </div>\n    <?php\n    return ob_get_clean();\n}\nadd_shortcode('%slug%', 'up_shortcode_%slug%');\n"
+    },
+    {
+      "id": "shortcode_css",
+      "label": "Fichier CSS",
+      "type": "file",
+      "file_type": "css",
+      "file_path": "themes/%theme%/shortcodes/%slug%/style.css",
+      "default": ".shortcode-%slug% {\n    display: block;\n}\n"
+    },
+    {
+      "id": "shortcode_scss",
+      "label": "Fichier SCSS",
+      "type": "file",
+      "file_type": "scss",
+      "file_path": "themes/%theme%/shortcodes/%slug%/assets/scss/style.scss",
+      "default": ".shortcode-%slug% {\n  display: block;\n}\n"
+    },
+    {
+      "id": "shortcode_js",
+      "label": "Fichier JS",
+      "type": "file",
+      "file_type": "js",
+      "file_path": "themes/%theme%/shortcodes/%slug%/assets/js/%slug%.js",
+      "default": "document.addEventListener('DOMContentLoaded', () => {\n  const root = document.querySelector('.shortcode-%slug%');\n  if (!root) return;\n  // Votre logique ici\n});\n"
+    },
+    {
+      "id": "shortcode_gsap",
+      "label": "Fichier GSAP",
+      "type": "file",
+      "file_type": "js",
+      "file_path": "themes/%theme%/shortcodes/%slug%/assets/js/gsap/gsap-%slug%.js",
+      "default": "import { gsap } from 'gsap';\n\nexport function init%SLUG_CAMEL%() {\n  const root = document.querySelector('.shortcode-%slug%');\n  if (!root) return;\n  gsap.from(root, { opacity: 0, y: 40, duration: 0.6, ease: 'power2.out' });\n}\n"
+    }
+  ],
+  "apply_callback": "up_config_apply_shortcodes"
+}

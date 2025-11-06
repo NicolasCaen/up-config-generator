@@ -16,6 +16,7 @@ Plugin WordPress permettant de créer et gérer des configurations pré-établie
 - **Gestion de fichiers** : création automatique de fichiers SCSS, CSS, JS, PHP avec éditeur CodeMirror intégré
 - **Templates CF7** : champ dédié pour stocker et réappliquer le formulaire Contact Form 7
 - **Aperçus visuels** : upload d'une image pour chaque configuration avec affichage dans le listing
+- **Shortcodes** : génération complète d'un dossier de shortcode (PHP, CSS, SCSS, JS, GSAP) avec slug automatisé
 
 ## Architecture
 
@@ -28,6 +29,7 @@ up-config-generator/
 ├── plugin-config/              # Configurations JSON des plugins
 │   ├── contact-form-7.json    # Exemple pour CF7
 │   └── yoast-seo.json         # Exemple pour Yoast
+│   └── shortcodes.json        # Exemple pour générer un shortcode complet
 ├── config/                     # Configurations sauvegardées (XML)
 │   ├── contact-form-7/        # Configs CF7
 │   │   ├── ma-config-1.xml
@@ -241,6 +243,18 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 - Affichage automatique dans la liste des configurations
 - Gestion depuis le formulaire : upload d'un nouvel aperçu ou suppression de l'image actuelle
 
+## Fonctionnalité : Générateur de shortcodes
+
+- **Slug automatique** : le nom du shortcode est nettoyé (accents, espaces) pour produire un slug cohérent (`hero-banner`)
+- **Fichiers générés** :
+  - PHP : `themes/{theme}/shortcodes/{slug}/{slug}.php`
+  - CSS : `themes/{theme}/shortcodes/{slug}/style.css`
+  - SCSS : `themes/{theme}/shortcodes/{slug}/assets/scss/style.scss`
+  - JS : `themes/{theme}/shortcodes/{slug}/assets/js/{slug}.js`
+  - GSAP : `themes/{theme}/shortcodes/{slug}/assets/js/gsap/gsap-{slug}.js`
+- **Placeholders** : Le contenu par défaut des fichiers remplace automatiquement `%slug%`, `%theme%` et `%SLUG_CAMEL%`
+- **Edition** : lors de la modification, le slug existant est rappelé et les chemins de fichiers sont conservés
+
 ## Fonctionnalité : Importation de configuration courante
 
 Lors de la création d'une nouvelle configuration, vous pouvez importer la configuration actuellement appliquée pour pré-remplir le formulaire.
@@ -290,6 +304,8 @@ function up_config_import_cf7($form_id) {
 Les fichiers physiques (SCSS, CSS, JS) sont automatiquement lus depuis leurs chemins définis dans le JSON.
 
 ## Changelog
+
+- **2025-11-06 · v0.1.5.0** · Ajout d'un module de génération de shortcodes : nouveau JSON `shortcodes.json`, création automatique des fichiers PHP/CSS/SCSS/JS/GSAP avec placeholders, slug nettoyé et sauvegardé dans la configuration. Support des aperçus existant pour les shortcodes.
 
 - **2025-11-06 · v0.1.4.0** · Ajout d'un champ d'aperçu pour chaque configuration (upload, suppression). Affichage des aperçus dans la liste des configurations et dans le formulaire d'édition. Stockage des images aux côtés des fichiers XML.
 
