@@ -1,0 +1,26 @@
+{
+  "name": "Fichiers JS",
+  "fields": [
+    {
+      "id": "js_name",
+      "label": "Nom du fichier",
+      "type": "text",
+      "description": "Nom interne pour identifier le fichier (ex: CTA Handler)."
+    },
+    {
+      "id": "js_relative_path",
+      "label": "Chemin relatif depuis le thème",
+      "type": "text",
+      "description": "Sans préfixe, ex: assets/js/cta.js"
+    },
+    {
+      "id": "js_content",
+      "label": "Contenu JS",
+      "type": "file",
+      "file_type": "js",
+      "file_path": "",
+      "default": "document.addEventListener('DOMContentLoaded', () => {\n  const root = document.querySelector('.%slug%');\n  if (!root) return;\n  // Votre logique ici\n});\n"
+    }
+  ],
+  "apply_callback": "up_config_apply_js_files"
+}

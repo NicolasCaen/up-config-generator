@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UP Config Generator
  * Description: Permet de créer et gérer des configurations pré-établies pour différents plugins WordPress (CF7, Yoast, etc.)
- * Version: 0.1.6.0
+ * Version: 0.1.8.0
  * Author: GEHIN Nicolas
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('UP_CONFIG_GENERATOR_VERSION', '0.1.6.0');
+define('UP_CONFIG_GENERATOR_VERSION', '0.1.8.0');
 define('UP_CONFIG_GENERATOR_PATH', plugin_dir_path(__FILE__));
 define('UP_CONFIG_GENERATOR_URL', plugin_dir_url(__FILE__));
 
@@ -19,6 +19,9 @@ require_once UP_CONFIG_GENERATOR_PATH . 'includes/cf7-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/yoast-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/shortcodes-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/functions-integration.php';
+require_once UP_CONFIG_GENERATOR_PATH . 'includes/scss-files-integration.php';
+require_once UP_CONFIG_GENERATOR_PATH . 'includes/js-files-integration.php';
+require_once UP_CONFIG_GENERATOR_PATH . 'includes/gsap-files-integration.php';
 
 class UP_Config_Generator {
     
@@ -268,7 +271,7 @@ class UP_Config_Generator {
         }
         
         $current_generated_slug = isset($saved_data['slug']) ? $saved_data['slug'] : '';
-        $plugin_uses_slug = in_array($plugin_slug, ['shortcodes', 'functions'], true);
+        $plugin_uses_slug = in_array($plugin_slug, ['shortcodes', 'functions', 'scss-files', 'js-files', 'gsap-files'], true);
 
         echo '<div class="wrap">';
         echo '<h1>' . ($is_new ? 'Nouvelle' : 'Modifier') . ' Configuration - ' . esc_html($plugin_config['name']) . '</h1>';
@@ -403,7 +406,7 @@ class UP_Config_Generator {
                     echo '<p class="description">' . esc_html($field['description']) . '</p>';
                 }
 
-                if ($plugin_uses_slug && in_array($field['id'], ['shortcode_name', 'function_name'], true) && !empty($current_generated_slug)) {
+                if ($plugin_uses_slug && in_array($field['id'], ['shortcode_name', 'function_name', 'scss_name', 'js_name', 'gsap_name'], true) && !empty($current_generated_slug)) {
                     echo '<p class="description">Slug généré : <code>' . esc_html($current_generated_slug) . '</code></p>';
                 }
                 
@@ -699,6 +702,55 @@ class UP_Config_Generator {
 
         return strtr($content, $replacements);
     }
+
+    /**
+     * Retourne le chemin du fichier SCSS pour un thème donné
+     */
+    private function get_scss_file_paths($theme, $relative_path) {
+        $paths = [];
+
+        if (!empty($relative_path)) {
+            $paths['scss_content'] = 'themes/' . $theme . '/' . ltrim($relative_path, '/');
+        }
+
+        return $paths;
+    }
+
+    /**
+     * Nettoie un chemin relatif fourni par l'utilisateur pour le dossier du thème
+     */
+    private function sanitize_theme_relative_path($path) {
+        $path = (string) $path;
+        $path = str_replace('\\', '/', $path);
+        $path = trim($path);
+        $path = ltrim($path, '/');
+
+        if ($path === '') {
+            return '';
+        }
+
+        $segments = explode('/', $path);
+        $clean_segments = [];
+
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+
+            if ($segment === '..') {
+                array_pop($clean_segments);
+                continue;
+            }
+
+            $sanitized_segment = sanitize_file_name($segment);
+
+            if ($sanitized_segment !== '') {
+                $clean_segments[] = $sanitized_segment;
+            }
+        }
+
+        return implode('/', $clean_segments);
+    }
     
     /**
      * Gère la sauvegarde d'une configuration
@@ -732,10 +784,11 @@ class UP_Config_Generator {
             }
         }
 
-        $plugin_uses_slug = in_array($plugin_slug, ['shortcodes', 'functions'], true);
+        $plugin_uses_slug = in_array($plugin_slug, ['shortcodes', 'functions', 'scss-files'], true);
         $generated_slug = '';
         $generated_slug_camel = '';
         $generated_slug_theme = '';
+        $shortcode_slug_for_xml = '';
 
         if ($plugin_slug === 'shortcodes') {
             $generated_slug_theme = get_stylesheet();
@@ -755,11 +808,39 @@ class UP_Config_Generator {
                 $generated_slug_camel = $this->slug_to_camel($generated_slug);
 
                 $paths = $this->get_shortcode_file_paths($generated_slug, $generated_slug_theme);
+
+                $relative_fields_map = [
+                    'shortcode_php_relative_path' => 'shortcode_php',
+                    'shortcode_css_relative_path' => 'shortcode_css',
+                    'shortcode_scss_relative_path' => 'shortcode_scss',
+                    'shortcode_js_relative_path' => 'shortcode_js',
+                    'shortcode_gsap_relative_path' => 'shortcode_gsap'
+                ];
+
+                foreach ($relative_fields_map as $relative_field => $target_field) {
+                    if (isset($config_fields[$relative_field])) {
+                        $relative_path = $this->sanitize_theme_relative_path($config_fields[$relative_field]);
+
+                        if (empty($relative_path)) {
+                            $config_fields[$relative_field] = '';
+                        } else {
+                            $config_fields[$relative_field] = $relative_path;
+                            $paths[$target_field] = 'themes/' . $generated_slug_theme . '/' . $relative_path;
+                        }
+                    }
+                }
+
                 foreach ($paths as $field_id => $path) {
                     $config_file_paths[$field_id] = $path;
                 }
 
+                $relative_placeholder_fields = array_keys($relative_fields_map);
+
                 foreach ($config_fields as $field_id => $field_value) {
+                    if (in_array($field_id, $relative_placeholder_fields, true)) {
+                        continue;
+                    }
+
                     if (is_string($field_value)) {
                         $config_fields[$field_id] = $this->replace_placeholders($field_value, $generated_slug, $generated_slug_camel, $generated_slug_theme);
                     }
@@ -773,6 +854,7 @@ class UP_Config_Generator {
 
                 $config_fields['_dynamic_slug'] = $generated_slug;
                 $config_fields['_shortcode_slug'] = $generated_slug;
+                $shortcode_slug_for_xml = $generated_slug;
             } else {
                 foreach (['shortcode_php', 'shortcode_css', 'shortcode_scss', 'shortcode_js', 'shortcode_gsap'] as $field_id) {
                     if (isset($config_file_paths[$field_id])) {
@@ -799,7 +881,17 @@ class UP_Config_Generator {
             if (!empty($generated_slug)) {
                 $generated_slug_camel = $this->slug_to_camel($generated_slug);
 
+                $relative_path = isset($config_fields['function_relative_path']) ? $this->sanitize_theme_relative_path($config_fields['function_relative_path']) : '';
+
+                if (empty($relative_path)) {
+                    $relative_path = 'functions/' . $generated_slug . '.php';
+                }
+
+                $config_fields['function_relative_path'] = $relative_path;
+
                 $paths = $this->get_function_file_paths($generated_slug, $generated_slug_theme);
+                $paths['function_php'] = 'themes/' . $generated_slug_theme . '/' . $relative_path;
+
                 foreach ($paths as $field_id => $path) {
                     $config_file_paths[$field_id] = $path;
                 }
@@ -821,6 +913,56 @@ class UP_Config_Generator {
                 if (isset($config_file_paths['function_php'])) {
                     $config_file_paths['function_php'] = '';
                 }
+            }
+        }
+
+        if ($plugin_slug === 'scss-files') {
+            $generated_slug_theme = get_stylesheet();
+            $scss_name = isset($config_fields['scss_name']) ? $config_fields['scss_name'] : '';
+            $existing_slug = isset($_POST['config_generated_slug']) ? sanitize_title(wp_unslash($_POST['config_generated_slug'])) : '';
+            $generated_slug = !empty($scss_name) ? $this->generate_config_slug($scss_name, 'scss') : '';
+
+            if (empty($generated_slug)) {
+                $generated_slug = $existing_slug;
+            }
+
+            if (empty($generated_slug)) {
+                $generated_slug = $this->generate_config_slug($title, 'scss');
+            }
+
+            $relative_path = isset($config_fields['scss_relative_path']) ? $config_fields['scss_relative_path'] : '';
+            $relative_path = $this->sanitize_theme_relative_path($relative_path);
+
+            if (empty($relative_path) && !empty($generated_slug)) {
+                $relative_path = 'assets/scss/' . $generated_slug . '.scss';
+            }
+
+            $config_fields['scss_relative_path'] = $relative_path;
+
+            if (!empty($generated_slug)) {
+                $generated_slug_camel = $this->slug_to_camel($generated_slug);
+            }
+
+            if (!empty($relative_path)) {
+                $paths = $this->get_scss_file_paths($generated_slug_theme, $relative_path);
+                foreach ($paths as $field_id => $path) {
+                    $config_file_paths[$field_id] = $path;
+                }
+            } else {
+                $config_file_paths['scss_content'] = '';
+            }
+
+            if (!empty($generated_slug) && isset($config_fields['scss_content'])) {
+                $config_fields['scss_content'] = $this->replace_placeholders(
+                    $config_fields['scss_content'],
+                    $generated_slug,
+                    !empty($generated_slug_camel) ? $generated_slug_camel : $generated_slug,
+                    $generated_slug_theme
+                );
+            }
+
+            if (!empty($generated_slug)) {
+                $config_fields['_dynamic_slug'] = $generated_slug;
             }
         }
         
@@ -847,10 +989,10 @@ class UP_Config_Generator {
         $element = isset($_POST['config_element']) ? sanitize_text_field(wp_unslash($_POST['config_element'])) : '';
         $xml->addChild('element', $element);
 
-        if ($plugin_slug === 'shortcodes' && !empty($shortcode_slug)) {
+        if ($plugin_slug === 'shortcodes' && !empty($shortcode_slug_for_xml)) {
             $slug_node = $xml->addChild('slug');
             $slug_dom = dom_import_simplexml($slug_node);
-            $slug_dom->appendChild($slug_dom->ownerDocument->createCDATASection($shortcode_slug));
+            $slug_dom->appendChild($slug_dom->ownerDocument->createCDATASection($shortcode_slug_for_xml));
         }
         
         // Ajouter les champs
@@ -1046,7 +1188,7 @@ class UP_Config_Generator {
         }
         
         foreach ($saved_data['file_paths'] as $field_id => $file_path) {
-            if (empty($file_path) || !isset($saved_data['fields'][$field_id])) {
+            if (!isset($saved_data['fields'][$field_id])) {
                 continue;
             }
             
@@ -1055,14 +1197,24 @@ class UP_Config_Generator {
             if (trim((string) $content) === '') {
                 continue;
             }
-            
+
+            $target_path = $file_path;
+
+            if (empty($target_path) && isset($saved_data['file_paths'][$field_id])) {
+                $target_path = $saved_data['file_paths'][$field_id];
+            }
+
+            if (empty($target_path)) {
+                continue;
+            }
+
             // Résoudre le chemin absolu
             // Si le chemin commence par /, c'est un chemin absolu depuis ABSPATH
             // Sinon, c'est relatif au dossier wp-content
-            if (strpos($file_path, '/') === 0) {
-                $absolute_path = ABSPATH . ltrim($file_path, '/');
+            if (strpos($target_path, '/') === 0) {
+                $absolute_path = ABSPATH . ltrim($target_path, '/');
             } else {
-                $absolute_path = WP_CONTENT_DIR . '/' . $file_path;
+                $absolute_path = WP_CONTENT_DIR . '/' . $target_path;
             }
             
             // Créer les dossiers parents si nécessaire

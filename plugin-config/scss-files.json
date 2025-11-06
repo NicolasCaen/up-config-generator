@@ -1,0 +1,26 @@
+{
+  "name": "Fichiers SCSS",
+  "fields": [
+    {
+      "id": "scss_name",
+      "label": "Nom du fichier",
+      "type": "text",
+      "description": "Nom interne pour identifier le fichier (ex: Styles CTA)."
+    },
+    {
+      "id": "scss_relative_path",
+      "label": "Chemin relatif depuis le thème",
+      "type": "text",
+      "description": "Sans préfixe, ex: assets/scss/components/_buttons.scss"
+    },
+    {
+      "id": "scss_content",
+      "label": "Contenu SCSS",
+      "type": "file",
+      "file_type": "scss",
+      "file_path": "",
+      "default": "// SCSS généré\n.%slug% {\n  // styles\n}\n"
+    }
+  ],
+  "apply_callback": "up_config_apply_scss_files"
+}

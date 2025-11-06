@@ -8,6 +8,12 @@
       "description": "Intitulé descriptif sans caractères spéciaux (ex: Hero CTA). Il servira à générer le slug et le nom de la fonction."
     },
     {
+      "id": "function_relative_path",
+      "label": "Chemin relatif dans le thème",
+      "type": "text",
+      "description": "Ex: functions/custom/up-ma-fonction.php. Laissez vide pour utiliser le chemin par défaut."
+    },
+    {
       "id": "function_php",
       "label": "Code PHP",
       "type": "file",

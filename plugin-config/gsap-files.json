@@ -1,0 +1,26 @@
+{
+  "name": "Fichiers GSAP",
+  "fields": [
+    {
+      "id": "gsap_name",
+      "label": "Nom du fichier",
+      "type": "text",
+      "description": "Nom interne pour identifier le fichier (ex: CTA Animation)."
+    },
+    {
+      "id": "gsap_relative_path",
+      "label": "Chemin relatif depuis le thème",
+      "type": "text",
+      "description": "Sans préfixe, ex: assets/js/gsap/gsap-cta.js"
+    },
+    {
+      "id": "gsap_content",
+      "label": "Contenu GSAP",
+      "type": "file",
+      "file_type": "js",
+      "file_path": "",
+      "default": "import { gsap } from 'gsap';\n\nexport function init%SLUG_CAMEL%() {\n  const root = document.querySelector('.%slug%');\n  if (!root) return;\n  gsap.from(root, { opacity: 0, y: 40, duration: 0.6, ease: 'power2.out' });\n}\n"
+    }
+  ],
+  "apply_callback": "up_config_apply_gsap_files"
+}

@@ -16,12 +16,24 @@
       "default": "<?php\nfunction up_shortcode_%slug%($atts = [], $content = null) {\n    $atts = shortcode_atts([], $atts, '%slug%');\n    ob_start();\n    ?>\n    <div class=\"shortcode-%slug%\">\n        <?php echo do_shortcode($content); ?>\n    </div>\n    <?php\n    return ob_get_clean();\n}\nadd_shortcode('%slug%', 'up_shortcode_%slug%');\n"
     },
     {
+      "id": "shortcode_php_relative_path",
+      "label": "Chemin relatif PHP",
+      "type": "text",
+      "description": "Ex: shortcodes/cta/cta.php"
+    },
+    {
       "id": "shortcode_css",
       "label": "Fichier CSS",
       "type": "file",
       "file_type": "css",
       "file_path": "themes/%theme%/shortcodes/%slug%/style.css",
       "default": ".shortcode-%slug% {\n    display: block;\n}\n"
+    },
+    {
+      "id": "shortcode_css_relative_path",
+      "label": "Chemin relatif CSS",
+      "type": "text",
+      "description": "Ex: shortcodes/cta/style.css"
     },
     {
       "id": "shortcode_scss",
@@ -32,6 +44,12 @@
       "default": ".shortcode-%slug% {\n  display: block;\n}\n"
     },
     {
+      "id": "shortcode_scss_relative_path",
+      "label": "Chemin relatif SCSS",
+      "type": "text",
+      "description": "Ex: shortcodes/cta/assets/scss/style.scss"
+    },
+    {
       "id": "shortcode_js",
       "label": "Fichier JS",
       "type": "file",
@@ -40,12 +58,24 @@
       "default": "document.addEventListener('DOMContentLoaded', () => {\n  const root = document.querySelector('.shortcode-%slug%');\n  if (!root) return;\n  // Votre logique ici\n});\n"
     },
     {
+      "id": "shortcode_js_relative_path",
+      "label": "Chemin relatif JS",
+      "type": "text",
+      "description": "Ex: shortcodes/cta/assets/js/cta.js"
+    },
+    {
       "id": "shortcode_gsap",
       "label": "Fichier GSAP",
       "type": "file",
       "file_type": "js",
       "file_path": "themes/%theme%/shortcodes/%slug%/assets/js/gsap/gsap-%slug%.js",
       "default": "import { gsap } from 'gsap';\n\nexport function init%SLUG_CAMEL%() {\n  const root = document.querySelector('.shortcode-%slug%');\n  if (!root) return;\n  gsap.from(root, { opacity: 0, y: 40, duration: 0.6, ease: 'power2.out' });\n}\n"
+    },
+    {
+      "id": "shortcode_gsap_relative_path",
+      "label": "Chemin relatif GSAP",
+      "type": "text",
+      "description": "Ex: shortcodes/cta/assets/js/gsap/gsap-cta.js"
     }
   ],
   "apply_callback": "up_config_apply_shortcodes"

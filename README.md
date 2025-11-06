@@ -18,6 +18,9 @@ Plugin WordPress permettant de créer et gérer des configurations pré-établie
 - **Aperçus visuels** : upload d'une image pour chaque configuration avec affichage dans le listing
 - **Shortcodes** : génération complète d'un dossier de shortcode (PHP, CSS, SCSS, JS, GSAP) avec slug automatisé
 - **Fonctions PHP** : création automatisée de fichiers PHP dans `functions/` avec slug normalisé
+- **Fichiers SCSS** : création de feuilles SCSS à l'emplacement souhaité du thème (chemin relatif configurable)
+- **Fichiers JS** : création de fichiers JS à l'emplacement souhaité du thème (chemin relatif configurable, fallback `assets/js/{slug}.js`)
+- **Fichiers GSAP** : création de fichiers GSAP à l'emplacement souhaité du thème (chemin relatif configurable, fallback `assets/js/gsap/gsap-{slug}.js`)
 
 ## Architecture
 
@@ -32,6 +35,9 @@ up-config-generator/
 │   └── yoast-seo.json         # Exemple pour Yoast
 │   └── shortcodes.json        # Exemple pour générer un shortcode complet
 │   └── functions.json         # Exemple pour créer une fonction PHP dédiée
+│   └── scss-files.json        # Exemple pour générer un fichier SCSS à un chemin personnalisé
+│   └── js-files.json          # Exemple pour générer un fichier JS à un chemin personnalisé
+│   └── gsap-files.json        # Exemple pour générer un fichier GSAP à un chemin personnalisé
 ├── config/                     # Configurations sauvegardées (XML)
 │   ├── contact-form-7/        # Configs CF7
 │   │   ├── ma-config-1.xml
@@ -40,7 +46,12 @@ up-config-generator/
 │       └── config-seo.xml
 ├── includes/                   # Intégrations
 │   ├── cf7-integration.php
-│   └── yoast-integration.php
+│   ├── yoast-integration.php
+│   ├── shortcodes-integration.php
+│   ├── functions-integration.php
+│   ├── scss-files-integration.php
+│   ├── js-files-integration.php
+│   └── gsap-files-integration.php
 └── assets/                     # Ressources CSS/JS
     ├── admin.css
     └── admin.js
@@ -264,6 +275,28 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 - **Placeholders** : le contenu remplace `%slug%`, `%SLUG_CAMEL%`, `%SLUG_UNDERSCORE%` et `%theme%`
 - **Edition** : le slug existant est affiché et préserve le chemin du fichier PHP
 
+## Fonctionnalité : Générateur de fichiers SCSS
+
+- **Chemin libre** : saisissez un chemin relatif (ex: `assets/scss/components/_cta.scss`) qui sera résolu dans `wp-content/themes/{theme}`
+- **Nettoyage automatique** : les segments invalides ou les `..` sont nettoyés pour éviter toute sortie du thème
+- **Fallback** : si le champ est vide, un chemin par défaut `assets/scss/{slug}.scss` est proposé
+- **Placeholders** : le contenu peut utiliser `%slug%`, `%SLUG_CAMEL%`, `%SLUG_UNDERSCORE%`, `%theme%`
+- **Edition** : le chemin enregistré est réaffiché et le fichier n'est régénéré que si du contenu est fourni
+
+## Fonctionnalité : Générateur de fichiers JS
+
+- **Chemin libre** : `js_relative_path` (ex: `assets/js/cta.js`) résolu dans `wp-content/themes/{theme}`
+- **Fallback** : si vide, `assets/js/{slug}.js`
+- **Placeholders** : `%slug%`, `%SLUG_CAMEL%`, `%SLUG_UNDERSCORE%`, `%theme%` remplacés dans le contenu uniquement
+- **Edition** : le chemin enregistré est rappelé et le fichier n'est régénéré que si du contenu est fourni
+
+## Fonctionnalité : Générateur de fichiers GSAP
+
+- **Chemin libre** : `gsap_relative_path` (ex: `assets/js/gsap/gsap-cta.js`) résolu dans `wp-content/themes/{theme}`
+- **Fallback** : si vide, `assets/js/gsap/gsap-{slug}.js`
+- **Placeholders** : `%slug%`, `%SLUG_CAMEL%`, `%SLUG_UNDERSCORE%`, `%theme%` remplacés dans le contenu uniquement
+- **Edition** : le chemin enregistré est rappelé et le fichier n'est régénéré que si du contenu est fourni
+
 ## Fonctionnalité : Importation de configuration courante
 
 Lors de la création d'une nouvelle configuration, vous pouvez importer la configuration actuellement appliquée pour pré-remplir le formulaire.
@@ -313,6 +346,9 @@ function up_config_import_cf7($form_id) {
 Les fichiers physiques (SCSS, CSS, JS) sont automatiquement lus depuis leurs chemins définis dans le JSON.
 
 ## Changelog
+
+- **2025-11-06 · v0.1.8.0** · Ajout des modules "Fichiers JS" et "Fichiers GSAP" avec chemins relatifs configurables, fallbacks automatiques (`assets/js/{slug}.js`, `assets/js/gsap/gsap-{slug}.js`), et remplacement de placeholders dans le contenu uniquement. Affichage du slug généré dans le formulaire.
+- **2025-11-06 · v0.1.7.0** · Ajout du générateur de fichiers SCSS avec chemin relatif configurable, nettoyage automatique du chemin et support des placeholders. Détection des slugs mutualisée pour les trois modules (shortcodes, fonctions, SCSS).
 
 - **2025-11-06 · v0.1.6.0** · Ajout du générateur de fonctions PHP (nouveau JSON `functions.json`, slug automatique, création du fichier dans `functions/`). Mutualisation de la logique de slug et support du placeholder `%SLUG_UNDERSCORE%`.
 
