@@ -291,6 +291,21 @@ class UP_Config_Generator {
                         }
                         echo '</select>';
                         break;
+                    case 'file':
+                        // Champ de type fichier (CSS, SCSS, JS, etc.)
+                        $file_type = isset($field['file_type']) ? $field['file_type'] : 'css';
+                        $file_path = isset($field['file_path']) ? $field['file_path'] : '';
+                        
+                        echo '<div class="up-config-file-field">';
+                        echo '<textarea id="field_' . esc_attr($field['id']) . '" name="config_fields[' . esc_attr($field['id']) . ']" class="up-config-code-editor" data-mode="' . esc_attr($file_type) . '" rows="15">' . esc_textarea($field_value) . '</textarea>';
+                        
+                        if (!empty($file_path)) {
+                            echo '<p class="description"><strong>Fichier de destination :</strong> <code>' . esc_html($file_path) . '</code></p>';
+                        }
+                        
+                        echo '<input type="hidden" name="config_file_paths[' . esc_attr($field['id']) . ']" value="' . esc_attr($file_path) . '">';
+                        echo '</div>';
+                        break;
                 }
                 
                 if (!empty($field['description'])) {
@@ -392,13 +407,19 @@ class UP_Config_Generator {
             'description' => (string) $xml->description,
             'date' => (string) $xml->date,
             'element' => (string) $xml->element,
-            'fields' => []
+            'fields' => [],
+            'file_paths' => []
         ];
         
         if (isset($xml->fields->field)) {
             foreach ($xml->fields->field as $field) {
                 $field_id = (string) $field['id'];
                 $data['fields'][$field_id] = (string) $field;
+                
+                // Charger le chemin de fichier si présent
+                if (isset($field['file_path'])) {
+                    $data['file_paths'][$field_id] = (string) $field['file_path'];
+                }
             }
         }
         
@@ -443,10 +464,15 @@ class UP_Config_Generator {
             foreach ($_POST['config_fields'] as $field_id => $field_value) {
                 $field = $fields->addChild('field', htmlspecialchars($field_value));
                 $field->addAttribute('id', $field_id);
+                
+                // Ajouter le chemin de fichier si présent
+                if (isset($_POST['config_file_paths'][$field_id]) && !empty($_POST['config_file_paths'][$field_id])) {
+                    $field->addAttribute('file_path', $_POST['config_file_paths'][$field_id]);
+                }
             }
         }
         
-        // Sauvegarder le fichier
+        // Sauvegarder le fichier XML
         $config_dir = UP_CONFIG_GENERATOR_PATH . 'config/' . $plugin_slug;
         wp_mkdir_p($config_dir);
         
@@ -518,7 +544,7 @@ class UP_Config_Generator {
     private function apply_configuration_from_file($plugin_slug, $config_file) {
         $plugin_config = $this->load_config($plugin_slug);
         
-        if (!$plugin_config || empty($plugin_config['apply_callback'])) {
+        if (!$plugin_config) {
             return false;
         }
         
@@ -528,13 +554,51 @@ class UP_Config_Generator {
             return false;
         }
         
+        // Créer les fichiers physiques (SCSS, CSS, JS, etc.)
+        $this->create_physical_files($plugin_slug, $saved_data);
+        
         // Appeler la fonction callback pour appliquer la configuration
-        if (is_callable($plugin_config['apply_callback'])) {
+        if (!empty($plugin_config['apply_callback']) && is_callable($plugin_config['apply_callback'])) {
             call_user_func($plugin_config['apply_callback'], $saved_data['fields'], $saved_data['element']);
             return true;
         }
         
         return false;
+    }
+    
+    /**
+     * Crée les fichiers physiques (SCSS, CSS, JS, etc.) depuis la configuration
+     */
+    private function create_physical_files($plugin_slug, $saved_data) {
+        if (empty($saved_data['file_paths'])) {
+            return;
+        }
+        
+        foreach ($saved_data['file_paths'] as $field_id => $file_path) {
+            if (empty($file_path) || !isset($saved_data['fields'][$field_id])) {
+                continue;
+            }
+            
+            $content = $saved_data['fields'][$field_id];
+            
+            // Résoudre le chemin absolu
+            // Si le chemin commence par /, c'est un chemin absolu depuis ABSPATH
+            // Sinon, c'est relatif au dossier wp-content
+            if (strpos($file_path, '/') === 0) {
+                $absolute_path = ABSPATH . ltrim($file_path, '/');
+            } else {
+                $absolute_path = WP_CONTENT_DIR . '/' . $file_path;
+            }
+            
+            // Créer les dossiers parents si nécessaire
+            $dir = dirname($absolute_path);
+            if (!file_exists($dir)) {
+                wp_mkdir_p($dir);
+            }
+            
+            // Écrire le fichier
+            file_put_contents($absolute_path, $content);
+        }
     }
     
     /**
@@ -546,8 +610,14 @@ class UP_Config_Generator {
         }
         
         wp_enqueue_media();
+        
+        // CodeMirror pour l'édition de code
+        wp_enqueue_code_editor(['type' => 'text/css']);
+        wp_enqueue_script('wp-theme-plugin-editor');
+        wp_enqueue_style('wp-codemirror');
+        
         wp_enqueue_style('up-config-generator-admin', UP_CONFIG_GENERATOR_URL . 'assets/admin.css', [], UP_CONFIG_GENERATOR_VERSION);
-        wp_enqueue_script('up-config-generator-admin', UP_CONFIG_GENERATOR_URL . 'assets/admin.js', ['jquery'], UP_CONFIG_GENERATOR_VERSION, true);
+        wp_enqueue_script('up-config-generator-admin', UP_CONFIG_GENERATOR_URL . 'assets/admin.js', ['jquery', 'wp-codemirror'], UP_CONFIG_GENERATOR_VERSION, true);
     }
 }
 

@@ -64,6 +64,22 @@
       "label": "Message d'erreur",
       "type": "text",
       "description": "Message affiché en cas d'erreur"
+    },
+    {
+      "id": "form_scss",
+      "label": "Styles SCSS du formulaire",
+      "type": "file",
+      "file_type": "scss",
+      "file_path": "themes/twentytwentyfive/assets/scss/_form.scss",
+      "description": "Code SCSS pour styliser le formulaire"
+    },
+    {
+      "id": "form_js",
+      "label": "JavaScript du formulaire",
+      "type": "file",
+      "file_type": "js",
+      "file_path": "themes/twentytwentyfive/assets/js/form.js",
+      "description": "Code JavaScript pour les interactions du formulaire"
     }
   ],
   "element_selector": {

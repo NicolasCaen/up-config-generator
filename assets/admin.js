@@ -7,6 +7,41 @@
     
     $(document).ready(function() {
         
+        // Initialiser CodeMirror pour les champs de code
+        if (typeof wp !== 'undefined' && typeof wp.codeEditor !== 'undefined') {
+            $('.up-config-code-editor').each(function() {
+                const $textarea = $(this);
+                const mode = $textarea.data('mode') || 'css';
+                
+                // Mapper les modes
+                const modeMap = {
+                    'scss': 'text/x-scss',
+                    'css': 'text/css',
+                    'js': 'text/javascript',
+                    'javascript': 'text/javascript',
+                    'json': 'application/json',
+                    'html': 'text/html',
+                    'php': 'application/x-httpd-php'
+                };
+                
+                const editorSettings = wp.codeEditor.defaultSettings ? _.clone(wp.codeEditor.defaultSettings) : {};
+                editorSettings.codemirror = _.extend(
+                    {},
+                    editorSettings.codemirror,
+                    {
+                        mode: modeMap[mode] || 'text/css',
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        indentUnit: 2,
+                        tabSize: 2,
+                        indentWithTabs: false
+                    }
+                );
+                
+                wp.codeEditor.initialize($textarea.attr('id'), editorSettings);
+            });
+        }
+        
         // Gestion de la case "Appliquer à la configuration"
         const $applyCheckbox = $('#apply_config');
         

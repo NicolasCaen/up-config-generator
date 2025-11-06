@@ -13,6 +13,7 @@ Plugin WordPress permettant de créer et gérer des configurations pré-établie
 - **Application sélective** : possibilité d'enregistrer sans appliquer ou d'appliquer immédiatement
 - **Réédition complète** : toutes les données XML sont rechargées lors de l'édition
 - **Sélecteur d'élément** optionnel pour cibler un élément spécifique (ex: formulaire CF7)
+- **Gestion de fichiers** : création automatique de fichiers SCSS, CSS, JS avec éditeur CodeMirror intégré
 
 ## Architecture
 
@@ -50,7 +51,7 @@ Chaque fichier JSON dans `plugin-config/` définit :
     {
       "id": "field_id",
       "label": "Label du champ",
-      "type": "text|textarea|select",
+      "type": "text|textarea|select|file",
       "description": "Description optionnelle",
       "options": {}
     }
@@ -63,6 +64,30 @@ Chaque fichier JSON dans `plugin-config/` définit :
   "apply_callback": "function_name"
 }
 ```
+
+### Types de champs disponibles
+
+- **text** : Champ texte simple
+- **textarea** : Zone de texte multi-lignes
+- **select** : Liste déroulante (nécessite `options`)
+- **file** : Éditeur de code avec CodeMirror (nécessite `file_type` et `file_path`)
+
+#### Champ de type "file"
+
+```json
+{
+  "id": "form_scss",
+  "label": "Styles SCSS du formulaire",
+  "type": "file",
+  "file_type": "scss",
+  "file_path": "themes/twentytwentyfive/assets/scss/_form.scss",
+  "description": "Code SCSS pour styliser le formulaire"
+}
+```
+
+**Paramètres** :
+- `file_type` : Type de fichier (`scss`, `css`, `js`, `javascript`, `json`, `html`, `php`)
+- `file_path` : Chemin de destination relatif à `wp-content/` (ou absolu depuis la racine WordPress si commence par `/`)
 
 ## Installation
 
@@ -104,9 +129,18 @@ Dans le tableau des configurations, vous pouvez :
     <field id="mail_to">contact@example.com</field>
     <field id="mail_subject">Nouveau message</field>
     <field id="mail_body">Contenu du message</field>
+    <field id="form_scss" file_path="themes/twentytwentyfive/assets/scss/_form.scss">
+      .wpcf7 {
+        input[type="text"] {
+          border: 1px solid #ccc;
+        }
+      }
+    </field>
   </fields>
 </configuration>
 ```
+
+**Note** : Les champs de type "file" incluent l'attribut `file_path` qui indique où le fichier sera créé lors de l'application de la configuration.
 
 ## Exemple : Contact Form 7
 
@@ -184,6 +218,19 @@ function up_config_apply_cf7($config_data, $form_id) {
 }
 ```
 
+## Fonctionnalité : Gestion de fichiers
+
+Lors de l'application d'une configuration, les champs de type "file" créent automatiquement les fichiers physiques :
+
+1. Le contenu du champ est écrit dans le fichier spécifié par `file_path`
+2. Les dossiers parents sont créés automatiquement si nécessaire
+3. Les fichiers existants sont écrasés
+
+**Exemple d'utilisation** :
+- Créer un fichier SCSS pour styliser un formulaire CF7
+- Créer un fichier JS pour ajouter des interactions
+- Créer plusieurs fichiers en une seule configuration
+
 ## Changelog
 
-- **2025-11-06 · v0.1.0** · Création du plugin avec architecture de base, système de sauvegarde en fichiers XML, lecture des configurations JSON, interface d'administration dynamique avec tableau de gestion, réédition complète des configurations et logique d'application. Intégrations Contact Form 7 et Yoast SEO incluses.
+- **2025-11-06 · v0.1.0** · Création du plugin avec architecture de base, système de sauvegarde en fichiers XML, lecture des configurations JSON, interface d'administration dynamique avec tableau de gestion, réédition complète des configurations et logique d'application. Gestion de fichiers (SCSS, CSS, JS) avec éditeur CodeMirror intégré. Intégrations Contact Form 7 et Yoast SEO incluses.
