@@ -21,6 +21,7 @@ Plugin WordPress permettant de créer et gérer des configurations pré-établie
 - **Fichiers SCSS** : création de feuilles SCSS à l'emplacement souhaité du thème (chemin relatif configurable)
 - **Fichiers JS** : création de fichiers JS à l'emplacement souhaité du thème (chemin relatif configurable, fallback `assets/js/{slug}.js`)
 - **Fichiers GSAP** : création de fichiers GSAP à l'emplacement souhaité du thème (chemin relatif configurable, fallback `assets/js/gsap/gsap-{slug}.js`)
+- **Générateur d'index** : génère un fichier complet ou injecte un bloc entre délimiteurs (imports SCSS, register/enqueue scripts/styles) avec prévisualisation et mode mise à jour sans doublons
 
 ## Architecture
 
@@ -38,6 +39,7 @@ up-config-generator/
 │   └── scss-files.json        # Exemple pour générer un fichier SCSS à un chemin personnalisé
 │   └── js-files.json          # Exemple pour générer un fichier JS à un chemin personnalisé
 │   └── gsap-files.json        # Exemple pour générer un fichier GSAP à un chemin personnalisé
+│   └── index-generator.json   # Générateur d'index (scan automatique + injection entre délimiteurs)
 ├── config/                     # Configurations sauvegardées (XML)
 │   ├── contact-form-7/        # Configs CF7
 │   │   ├── ma-config-1.xml
@@ -51,7 +53,8 @@ up-config-generator/
 │   ├── functions-integration.php
 │   ├── scss-files-integration.php
 │   ├── js-files-integration.php
-│   └── gsap-files-integration.php
+│   ├── gsap-files-integration.php
+│   └── index-generator-integration.php
 └── assets/                     # Ressources CSS/JS
     ├── admin.css
     └── admin.js
@@ -283,6 +286,24 @@ Lors de l'application d'une configuration, les champs de type "file" créent aut
 - **Placeholders** : le contenu peut utiliser `%slug%`, `%SLUG_CAMEL%`, `%SLUG_UNDERSCORE%`, `%theme%`
 - **Edition** : le chemin enregistré est réaffiché et le fichier n'est régénéré que si du contenu est fourni
 
+## Fonctionnalité : Générateur d'index
+
+- **Modes** :
+  - Fichier complet: écrit tout le fichier (optionnellement avec `file_header`/`file_footer`).
+  - Injection entre délimiteurs: remplace le bloc entre `delimiter_start` et `delimiter_end`. Si le fichier n'existe pas, il est créé avec header/footer + délimiteurs + bloc.
+- **Types** :
+  - `import-scss` → `@import 'chemin/partiel';`
+  - `register-script` / `enqueue-script`
+  - `register-style` / `enqueue-style`
+- **Scan automatique** : `scan_folder_relative` + `scan_glob`
+  - Sélection SCSS: `scss_selection_mode = partials_only | no_partials | all`
+  - Tri optionnel et source manuelle possible (`manual_entries`)
+- **Enqueue/Register complets** :
+  - Dépendances via `deps` (une par ligne)
+  - `enqueue_has_url`, `base_url`, `enqueue_in_footer` (scripts), `enqueue_media` (styles)
+- **Mise à jour sans doublons** : `update_mode=1` fusionne les lignes nouvelles sans dupliquer et préserve l'ordre existant
+- **Prévisualisation** : bouton "Prévisualiser" affiche le bloc généré et le fichier final simulé
+
 ## Fonctionnalité : Générateur de fichiers JS
 
 - **Chemin libre** : `js_relative_path` (ex: `assets/js/cta.js`) résolu dans `wp-content/themes/{theme}`
@@ -347,6 +368,7 @@ Les fichiers physiques (SCSS, CSS, JS) sont automatiquement lus depuis leurs che
 
 ## Changelog
 
+- **2025-11-08 · v0.1.9.0** · Ajout du module « Générateur d'index » avec modes Fichier complet et Injection entre délimiteurs, prévisualisation sans écriture, support des types `import-scss`, `register/enqueue` scripts/styles (dépendances, URL, media/footer), sélection SCSS (`partials_only`, `no_partials`, `all`), header/footer facultatifs, et mode mise à jour sans doublons préservant l'ordre existant.
 - **2025-11-06 · v0.1.8.0** · Ajout des modules "Fichiers JS" et "Fichiers GSAP" avec chemins relatifs configurables, fallbacks automatiques (`assets/js/{slug}.js`, `assets/js/gsap/gsap-{slug}.js`), et remplacement de placeholders dans le contenu uniquement. Affichage du slug généré dans le formulaire.
 - **2025-11-06 · v0.1.7.0** · Ajout du générateur de fichiers SCSS avec chemin relatif configurable, nettoyage automatique du chemin et support des placeholders. Détection des slugs mutualisée pour les trois modules (shortcodes, fonctions, SCSS).
 

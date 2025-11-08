@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UP Config Generator
  * Description: Permet de créer et gérer des configurations pré-établies pour différents plugins WordPress (CF7, Yoast, etc.)
- * Version: 0.1.8.0
+ * Version: 0.1.9.0
  * Author: GEHIN Nicolas
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('UP_CONFIG_GENERATOR_VERSION', '0.1.8.0');
+define('UP_CONFIG_GENERATOR_VERSION', '0.1.9.0');
 define('UP_CONFIG_GENERATOR_PATH', plugin_dir_path(__FILE__));
 define('UP_CONFIG_GENERATOR_URL', plugin_dir_url(__FILE__));
 
@@ -22,6 +22,7 @@ require_once UP_CONFIG_GENERATOR_PATH . 'includes/functions-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/scss-files-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/js-files-integration.php';
 require_once UP_CONFIG_GENERATOR_PATH . 'includes/gsap-files-integration.php';
+require_once UP_CONFIG_GENERATOR_PATH . 'includes/index-generator-integration.php';
 
 class UP_Config_Generator {
     
@@ -275,6 +276,23 @@ class UP_Config_Generator {
 
         echo '<div class="wrap">';
         echo '<h1>' . ($is_new ? 'Nouvelle' : 'Modifier') . ' Configuration - ' . esc_html($plugin_config['name']) . '</h1>';
+
+        // Prévisualisation (pour index-generator)
+        $preview_data = null;
+        if (isset($_POST['preview_config']) && !empty($plugin_config['apply_callback']) && $plugin_config['apply_callback'] === 'up_config_apply_index_generator') {
+            $posted_fields = isset($_POST['config_fields']) && is_array($_POST['config_fields']) ? array_map('wp_unslash', $_POST['config_fields']) : [];
+            if (function_exists('up_config_preview_index_generator')) {
+                $preview_data = up_config_preview_index_generator($posted_fields);
+            }
+        }
+
+        if ($preview_data) {
+            echo '<div class="notice notice-info"><p><strong>Prévisualisation</strong></p>';
+            echo '<p><strong>Fichier cible :</strong> <code>' . esc_html($preview_data['target']) . '</code></p>';
+            echo '<details open><summary>Bloc généré</summary><pre style="max-height:300px;overflow:auto;">' . esc_html($preview_data['block']) . '</pre></details>';
+            echo '<details open><summary>Fichier complet (simulation)</summary><pre style="max-height:400px;overflow:auto;">' . esc_html($preview_data['final']) . '</pre></details>';
+            echo '</div>';
+        }
         
         // Section d'importation de configuration courante
         if ($is_new) {
@@ -365,7 +383,7 @@ class UP_Config_Generator {
                     $field_value = $field['default'];
                 }
                 
-                echo '<tr>';
+                echo '<tr class="up-field-row up-field-row-' . esc_attr($field['id']) . '">';
                 echo '<th><label for="field_' . esc_attr($field['id']) . '">' . esc_html($field['label']) . '</label></th>';
                 echo '<td>';
                 
@@ -454,10 +472,72 @@ class UP_Config_Generator {
         echo '</tr>';
         
         echo '</table>';
-        
-        submit_button($is_new ? 'Créer' : 'Mettre à jour');
+
+        // Boutons: Prévisualiser + Enregistrer
+        if (!empty($plugin_config['apply_callback']) && $plugin_config['apply_callback'] === 'up_config_apply_index_generator') {
+            $current_url = admin_url('admin.php?page=up-config-' . $plugin_slug . ($is_new ? '&action=new' : '&action=edit&config=' . urlencode($config_file)));
+            echo '<p class="submit">';
+            echo '<button type="submit" name="preview_config" value="1" class="button" formaction="' . esc_url($current_url) . '" formmethod="post">Prévisualiser</button> ';
+            echo get_submit_button($is_new ? 'Créer' : 'Mettre à jour', 'primary', '', false);
+            echo '</p>';
+        } else {
+            submit_button($is_new ? 'Créer' : 'Mettre à jour');
+        }
         
         echo '</form>';
+
+        // Script de visibilité dynamique pour index-generator
+        if ($plugin_slug === 'index-generator') {
+            echo '<script>(function(){
+                function q(id){return document.getElementById(id);} 
+                function row(id){return document.querySelector("tr.up-field-row-"+id);} 
+                function show(id, vis){var el=row(id); if(el){el.style.display = vis ? "" : "none";}}
+                function onChange(){
+                    var type = q("field_content_type") ? q("field_content_type").value : "";
+                    var mode = q("field_generation_mode") ? q("field_generation_mode").value : "";
+
+                    // Champs communs visibles
+                    show("target_relative_path", true);
+                    show("scan_folder_relative", true);
+                    show("scan_glob", true);
+                    show("manual_entries", true);
+
+                    // Délimiteurs et update selon mode
+                    var inject = (mode === "inject_between_delimiters");
+                    show("delimiter_start", inject);
+                    show("delimiter_end", inject);
+                    show("update_mode", inject);
+
+                    // Header/Footer toujours visibles (utiles si création)
+                    show("file_header", true);
+                    show("file_footer", true);
+
+                    // Spécifique SCSS
+                    var isScss = (type === "import-scss");
+                    show("scss_selection_mode", isScss);
+
+                    // Handles/URL/Dépendances pour register/enqueue
+                    var isScript = (type === "register-script" || type === "enqueue-script");
+                    var isStyle = (type === "register-style" || type === "enqueue-style");
+                    var isRegister = (type === "register-script" || type === "register-style");
+                    var isEnqueue = (type === "enqueue-script" || type === "enqueue-style");
+
+                    show("wp_handle_prefix", !isScss);
+                    show("deps", !isScss);
+                    show("base_url", !isScss); // utilisé pour register et enqueue avec URL
+                    show("enqueue_has_url", isEnqueue && !isScss);
+                    show("enqueue_in_footer", isScript && !isRegister);
+                    show("enqueue_media", isStyle);
+                }
+                document.addEventListener("change", function(e){
+                    if(e.target && (e.target.id==="field_content_type" || e.target.id==="field_generation_mode")){
+                        onChange();
+                    }
+                });
+                document.addEventListener("DOMContentLoaded", onChange);
+                onChange();
+            })();</script>';
+        }
         echo '</div>';
     }
     

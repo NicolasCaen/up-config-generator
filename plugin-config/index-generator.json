@@ -1,0 +1,142 @@
+{
+  "name": "Générateur d'index",
+  "fields": [
+    {
+      "id": "generation_mode",
+      "label": "Mode de génération",
+      "type": "select",
+      "options": {"full_file": "Fichier complet", "inject_between_delimiters": "Injection entre délimiteurs"},
+      "description": "Choisissez l'écriture complète du fichier ou l'injection dans une zone délimitée.",
+      "default": "inject_between_delimiters"
+    },
+    {
+      "id": "content_type",
+      "label": "Type de contenu",
+      "type": "select",
+      "options": {
+        "import-scss": "@import SCSS",
+        "register-script": "wp_register_script",
+        "enqueue-script": "wp_enqueue_script",
+        "register-style": "wp_register_style",
+        "enqueue-style": "wp_enqueue_style"
+      },
+      "default": "import-scss"
+    },
+    {
+      "id": "target_relative_path",
+      "label": "Fichier cible (chemin relatif thème)",
+      "type": "text",
+      "description": "Ex: assets/scss/style.scss, functions.php"
+    },
+    {
+      "id": "scan_folder_relative",
+      "label": "Dossier à scanner (relatif thème)",
+      "type": "text",
+      "description": "Ex: assets/scss"
+    },
+    {
+      "id": "scan_glob",
+      "label": "Pattern de fichiers",
+      "type": "text",
+      "default": "**/*.*",
+      "description": "Ex: **/*.scss, **/*.js"
+    },
+    {
+      "id": "scss_selection_mode",
+      "label": "Sélection SCSS",
+      "type": "select",
+      "options": {"partials_only": "Uniquement _partials", "no_partials": "Sans _partials", "all": "Tous"},
+      "default": "partials_only"
+    },
+    {
+      "id": "manual_entries",
+      "label": "Entrées manuelles (une par ligne)",
+      "type": "textarea",
+      "description": "Chemins relatifs ou handles selon le type"
+    },
+    {
+      "id": "delimiter_start",
+      "label": "Délimiteur début",
+      "type": "text",
+      "default": "//-- DEBUT INDEX --"
+    },
+    {
+      "id": "delimiter_end",
+      "label": "Délimiteur fin",
+      "type": "text",
+      "default": "//-- FIN INDEX --"
+    },
+    {
+      "id": "wp_handle_prefix",
+      "label": "Préfixe des handles WP",
+      "type": "text",
+      "default": "theme-"
+    },
+    {
+      "id": "base_url",
+      "label": "Base URL (optionnelle)",
+      "type": "text",
+      "description": "Si vide, utilisation de get_stylesheet_directory_uri()"
+    },
+    {
+      "id": "enqueue_has_url",
+      "label": "Enqueue avec URL complète",
+      "type": "select",
+      "options": {"1": "Oui", "0": "Non (handle déjà enregistré)"},
+      "default": "1"
+    },
+    {
+      "id": "enqueue_media",
+      "label": "Media (styles)",
+      "type": "text",
+      "default": "all"
+    },
+    {
+      "id": "enqueue_in_footer",
+      "label": "Scripts en footer",
+      "type": "select",
+      "options": {"1": "Oui", "0": "Non"},
+      "default": "1"
+    },
+    {
+      "id": "deps",
+      "label": "Dépendances (une par ligne)",
+      "type": "textarea",
+      "description": "Handles WP ou URLs"
+    },
+    {
+      "id": "recursive",
+      "label": "Scan récursif",
+      "type": "select",
+      "options": {"1": "Oui", "0": "Non"},
+      "default": "1"
+    },
+    {
+      "id": "sort",
+      "label": "Trier les lignes",
+      "type": "select",
+      "options": {"1": "Oui", "0": "Non"},
+      "default": "1"
+    },
+    {
+      "id": "update_mode",
+      "label": "Mise à jour sans doublons (injection)",
+      "type": "select",
+      "options": {"1": "Oui", "0": "Non"},
+      "default": "1"
+    },
+    {
+      "id": "file_header",
+      "label": "Début de fichier (optionnel)",
+      "type": "textarea",
+      "description": "Texte placé avant le bloc généré (utilisé en mode fichier complet, ou lors de la création initiale en mode injection)."
+    },
+    {
+      "id": "file_footer",
+      "label": "Fin de fichier (optionnel)",
+      "type": "textarea",
+      "description": "Texte placé après le bloc généré (utilisé en mode fichier complet, ou lors de la création initiale en mode injection)."
+    }
+  ],
+  "apply_callback": "up_config_apply_index_generator"
+}
